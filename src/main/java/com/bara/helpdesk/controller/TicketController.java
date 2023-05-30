@@ -34,6 +34,11 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.getByUserId(customUserDetails.getId()));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<TicketOutputDto> getTicketById(@PathVariable Long id){
+        return ResponseEntity.ok(ticketService.getById(id));
+    }
+
     @PostMapping("/create")
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER')")
     public ResponseEntity<TicketOutputDto> createTicket(
