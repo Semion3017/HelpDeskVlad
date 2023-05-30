@@ -26,7 +26,7 @@ public class AuthenticationService {
     private final UserDetailsService userDetailsService;
 
     public AuthenticationResponse register(RegisterRequest request) {
-        if(userRepository.findByEmail(request.getEmail()).isPresent()){
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("User with email " + request.getEmail() + " already exists");
         }
         User user = User.builder()
@@ -34,14 +34,10 @@ public class AuthenticationService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.ROLE_OWNER)
+                .role(Role.OWNER)
                 .build();
         userRepository.save(user);
-
-        String jwtToken = jwtService.generateToken(
-                getRole(request.getEmail()),
-                userDetailsService.loadUserByUsername(user.getEmail())
-        );
+        String jwtToken = generateToken(request.getEmail());
         return AuthenticationResponse.builder().token(jwtToken).build();
     }
 
@@ -49,17 +45,18 @@ public class AuthenticationService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()) // todo controller advice
         );
-
-        String jwtToken = jwtService.generateToken(
-                getRole(request.getEmail()),
-                userDetailsService.loadUserByUsername(request.getEmail())
-        );
+        String jwtToken = generateToken(request.getEmail());
         return AuthenticationResponse.builder().token(jwtToken).build();
     }
 
-    private Map<String, Object> getRole(String email){
+
+    private String generateToken(String email) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("role", userRepository.findByEmail(email).orElseThrow().getRole());
-        return extraClaims;
+        return jwtService.generateToken(
+                extraClaims,
+                userDetailsService.loadUserByUsername(email)
+        );
     }
+
 }

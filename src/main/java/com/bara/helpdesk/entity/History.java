@@ -2,11 +2,13 @@ package com.bara.helpdesk.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
+@Builder
 @AllArgsConstructor
 @Entity
 public class History {
@@ -16,12 +18,12 @@ public class History {
     @Column(name = "id")
     private Long id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "ticket_id")
     private Ticket ticket;
 
     @Column(name = "date")
-    private Date date;
+    private LocalDateTime date;
 
     @Column(name = "action")
     private String action;
@@ -31,5 +33,5 @@ public class History {
     private User user;
 
     @Column(name = "description", columnDefinition = "varchar(500)")
-    private String string;
+    private String description;
 }

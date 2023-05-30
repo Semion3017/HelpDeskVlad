@@ -10,17 +10,12 @@ import lombok.Data;
 public class Attachment {
 
     @Id
-    @GeneratedValue
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "ticket_id")
+    private Long ticket_id;
 
     @Lob
     @Column(name = "blob", columnDefinition = "BLOB")
     private byte[] blob;
-
-    @OneToOne
-    @JoinColumn(name = "ticket_id", nullable = false)
-    private Ticket ticket;
 
     @Column(name = "name")
     private String name;

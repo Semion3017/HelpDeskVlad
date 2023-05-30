@@ -2,11 +2,13 @@ package com.bara.helpdesk.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
+@Builder
 @Entity
 @AllArgsConstructor
 public class Feedback {
@@ -24,7 +26,7 @@ public class Feedback {
     private int rate;
 
     @Column(name = "date")
-    private Date date;
+    private LocalDateTime date;
 
     @Column(name = "text", columnDefinition = "varchar(500)")
     private String text;

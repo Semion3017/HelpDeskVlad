@@ -4,13 +4,15 @@ import com.bara.helpdesk.entity.enums.State;
 import com.bara.helpdesk.entity.enums.Urgency;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
 @Entity
+@Builder
 public class Ticket {
 
     @Id
@@ -25,10 +27,10 @@ public class Ticket {
     private String description;
 
     @Column(name = "created_on")
-    private Date createdOn;
+    private LocalDate createdOn;
 
     @Column(name = "desired_resolution_date")
-    private Date desiredResolutionDate;
+    private LocalDate desiredResolutionDate;
 
     @OneToOne
     @JoinColumn(name = "assignee_id")

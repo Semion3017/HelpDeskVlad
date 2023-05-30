@@ -2,11 +2,13 @@ package com.bara.helpdesk.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
+@Builder
 @AllArgsConstructor
 @Entity
 public class Comment {
@@ -21,10 +23,10 @@ public class Comment {
     private User user;
 
     @Column(name = "text", columnDefinition = "varchar(500)")
-    private String string;
+    private String text;
 
     @Column(name = "date")
-    private Date date;
+    private LocalDateTime date;
 
     @OneToOne
     @JoinColumn(name = "ticket_id")
