@@ -2,6 +2,7 @@ package com.bara.helpdesk.security;
 
 import com.bara.helpdesk.entity.User;
 import com.bara.helpdesk.entity.enums.Role;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,10 +10,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
-
+@Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final long id;
+    private final Long id;
 
     private final String email;
 
