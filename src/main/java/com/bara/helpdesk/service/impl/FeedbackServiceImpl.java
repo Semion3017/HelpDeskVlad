@@ -33,4 +33,9 @@ public class FeedbackServiceImpl implements FeedbackService {
         return FeedbackMapper.toDto(feedbackRepository.save(feedback));
     }
 
+    @Override
+    public FeedbackOutputDto getByTicketId(Long id){
+        return FeedbackMapper.toDto(feedbackRepository.getByTicketId(id).orElseThrow());
+    }
+
 }

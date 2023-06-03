@@ -11,6 +11,9 @@ import com.bara.helpdesk.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -25,5 +28,10 @@ public class CommentServiceImpl implements CommentService {
                 comment.setUser((userRepository.findById(userId).orElseThrow()));
                 comment.setTicket(ticketRepository.findById(dto.getTicket_id()).orElseThrow());
         return CommentMapper.toDto(commentRepository.save(comment));
+    }
+
+    @Override
+    public List<CommentOutputDto> getAllByTicketId(Long id){
+        return commentRepository.getAllByTicketId(id).stream().map(CommentMapper::toDto).collect(Collectors.toList());
     }
 }
