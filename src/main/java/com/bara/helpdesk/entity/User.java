@@ -13,7 +13,7 @@ import lombok.*;
 @Table(name = "USERS")
 public class User{
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 

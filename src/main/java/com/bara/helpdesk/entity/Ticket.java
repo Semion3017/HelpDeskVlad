@@ -3,20 +3,20 @@ package com.bara.helpdesk.entity;
 import com.bara.helpdesk.entity.enums.State;
 import com.bara.helpdesk.entity.enums.Urgency;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Builder
+@Table(name = "TICKETS")
 public class Ticket {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
