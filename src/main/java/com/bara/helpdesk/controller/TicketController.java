@@ -39,7 +39,7 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.getById(id));
     }
 
-    @PostMapping("/create")
+    @PostMapping
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER')")
     public ResponseEntity<TicketOutputDto> createTicket(
             @RequestBody TicketCreateDto dto,
@@ -49,13 +49,14 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.createTicket(dto, customUserDetails.getId()));
     }
 
-    @PutMapping("/update")
+    @PutMapping
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER')")
     public ResponseEntity<TicketOutputDto> updateTicket(@RequestBody TicketEditDto dto){
         return ResponseEntity.ok(ticketService.updateTicket(dto));
     }
 
     @PutMapping("/state")
+    @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
     public ResponseEntity<String> changeTicketState(@RequestBody TicketStateChangeDto dto, @AuthenticationPrincipal CustomUserDetails customUserDetails){
         return ResponseEntity.ok(ticketService.changeTicketState(dto, customUserDetails.getId()));
     }

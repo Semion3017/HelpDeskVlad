@@ -30,8 +30,8 @@ public class TicketMapper {
     }
 
     public static Ticket toEntity(TicketCreateDto dto) {
-        State state = null;
-        if (State.valueOf(dto.getState()) != State.DRAFT & State.valueOf(dto.getState()) != State.NEW) {
+        State state = State.valueOf(dto.getState());
+        if (state != State.DRAFT & state != State.NEW) {
             state = State.DRAFT;
         }
         return Ticket.builder()
