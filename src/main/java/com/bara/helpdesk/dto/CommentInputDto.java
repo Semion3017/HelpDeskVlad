@@ -10,5 +10,5 @@ import lombok.Data;
 public class CommentInputDto {
     private String text;
 
-    private Long ticket_id;
+    private Long ticketId;
 }

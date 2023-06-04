@@ -26,7 +26,7 @@ public class CommentServiceImpl implements CommentService {
     public CommentOutputDto createComment(CommentInputDto dto, Long userId) {
         Comment comment = CommentMapper.toEntity(dto);
                 comment.setUser((userRepository.findById(userId).orElseThrow()));
-                comment.setTicket(ticketRepository.findById(dto.getTicket_id()).orElseThrow());
+                comment.setTicket(ticketRepository.findById(dto.getTicketId()).orElseThrow());
         return CommentMapper.toDto(commentRepository.save(comment));
     }
 
