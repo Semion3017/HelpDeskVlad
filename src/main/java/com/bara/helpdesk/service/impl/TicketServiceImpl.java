@@ -54,8 +54,9 @@ public class TicketServiceImpl implements TicketService {
         ticket.setId(null);
         ticket.setCategory(category);
         ticket.setOwner(owner);
-        TicketOutputDto createdTicket = TicketMapper.ToDto(ticketRepository.save(ticket));
-        if (dto.getComment() == null) return createdTicket;
+        Ticket createdTicket = ticketRepository.save(ticket);
+        TicketOutputDto createdTicketDto = TicketMapper.ToDto(createdTicket);
+        if (dto.getComment() == null) return createdTicketDto;
         commentRepository.save(
                 Comment.builder()
                         .date(LocalDateTime.now())
@@ -64,8 +65,8 @@ public class TicketServiceImpl implements TicketService {
                         .ticket(ticket)
                         .build()
         );
-        historyService.logTicketCreation(ticket);
-        return createdTicket;
+        historyService.logTicketCreation(createdTicket);
+        return createdTicketDto;
     }
 
     @Override
