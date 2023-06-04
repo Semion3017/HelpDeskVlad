@@ -23,12 +23,13 @@ public class HistoryServiceImpl implements HistoryService {
 
     @Override
     public List<HistoryOutputDto> getByTicketId(Long ticketId){
-        return historyRepository.findByTicketId(ticketId).stream().map(this::toDto).collect(Collectors.toList());
+        return historyRepository.getAllByTicketId(ticketId).stream().map(this::toDto).collect(Collectors.toList());
     }
 
     @Override
     public String logTicketCreation(Ticket ticket) {
         History history = History.builder()
+                .ticket(ticket)
                 .user(ticket.getOwner())
                 .action("Ticket is created")
                 .date(LocalDateTime.now())
@@ -40,6 +41,7 @@ public class HistoryServiceImpl implements HistoryService {
     @Override
     public String logTicketUpdate(Ticket ticket) {
         History history = History.builder()
+                .ticket(ticket)
                 .user(ticket.getOwner())
                 .action("Ticket is created")
                 .date(LocalDateTime.now())

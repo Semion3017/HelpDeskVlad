@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface HistoryRepository extends JpaRepository<History, Long> {
 
-    List<History> findByTicketId(Long ticketId);
+    List<History> getAllByTicketId(Long id);
 }
