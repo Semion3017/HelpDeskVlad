@@ -35,7 +35,6 @@ public class TicketMapper {
             state = State.DRAFT;
         }
         return Ticket.builder()
-                .id(dto.getId())
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .createdOn(LocalDate.now())
@@ -45,7 +44,7 @@ public class TicketMapper {
                 .build();
     }
     public static Ticket toEntity(TicketEditDto dto) {
-        State state = null;
+        State state = State.valueOf(dto.getState());
         if (State.valueOf(dto.getState()) != State.DRAFT & State.valueOf(dto.getState()) != State.NEW) {
             state = State.DRAFT;
         }

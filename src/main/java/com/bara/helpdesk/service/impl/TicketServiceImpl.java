@@ -1,9 +1,9 @@
 package com.bara.helpdesk.service.impl;
 
-import com.bara.helpdesk.dto.TicketCreateDto;
-import com.bara.helpdesk.dto.TicketEditDto;
-import com.bara.helpdesk.dto.TicketOutputDto;
-import com.bara.helpdesk.dto.TicketStateChangeDto;
+import com.bara.helpdesk.dto.*;
+import com.bara.helpdesk.dto.exception.CategoryNotFoundException;
+import com.bara.helpdesk.dto.exception.TicketNotFoundException;
+import com.bara.helpdesk.dto.exception.UserNotFoundException;
 import com.bara.helpdesk.entity.Category;
 import com.bara.helpdesk.entity.Comment;
 import com.bara.helpdesk.entity.Ticket;
@@ -17,6 +17,9 @@ import com.bara.helpdesk.repository.UserRepository;
 import com.bara.helpdesk.service.HistoryService;
 import com.bara.helpdesk.service.TicketService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -39,23 +42,31 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    public Page<TicketOutputDto> getAllSortedTickets(int page, int size, String columnName, String direction){
+        Sort.Direction sortDirection = direction.equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        return ticketRepository.findAll(PageRequest.of(page, size, Sort.by(sortDirection, columnName))).map(TicketMapper::ToDto);
+    }
+
+    @Override
     public TicketOutputDto getById(Long id) {
-        return ticketRepository.findById(id).map(TicketMapper::ToDto).orElseThrow();
+        return ticketRepository.findById(id).map(TicketMapper::ToDto).orElseThrow(() -> new TicketNotFoundException("Ticket with ID: " + id + " not found"));
     }
 
     @Override
     public TicketOutputDto createTicket(TicketCreateDto dto, Long ownerId) {
-        Category category = categoryRepository.findById(dto.getCategoryId()).orElseThrow();
-        User owner = userRepository.findById(ownerId).orElseThrow();
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new  CategoryNotFoundException("Category with ID: " + dto.getCategoryId() + " not found"));
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new UserNotFoundException("User with ID: " + ownerId + " not found"));
         Ticket ticket = TicketMapper.toEntity(dto);
         if (ticket.getState().equals(State.NEW)){
             //TODO send an email to all MANAGERS
         }
-        ticket.setId(null);
         ticket.setCategory(category);
         ticket.setOwner(owner);
         Ticket createdTicket = ticketRepository.save(ticket);
         TicketOutputDto createdTicketDto = TicketMapper.ToDto(createdTicket);
+        historyService.logTicketCreation(createdTicket);
         if (dto.getComment() == null) return createdTicketDto;
         commentRepository.save(
                 Comment.builder()
@@ -65,14 +76,16 @@ public class TicketServiceImpl implements TicketService {
                         .ticket(ticket)
                         .build()
         );
-        historyService.logTicketCreation(createdTicket);
+
         return createdTicketDto;
     }
 
     @Override
     public TicketOutputDto updateTicket(TicketEditDto dto) {
-        Category category = categoryRepository.findById(dto.getCategoryId()).orElseThrow();
-        Ticket oldTicket = ticketRepository.findById(dto.getId()).orElseThrow();
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new  CategoryNotFoundException("Category with ID: " + dto.getCategoryId() + " not found"));
+        Ticket oldTicket = ticketRepository.findById(dto.getId())
+                .orElseThrow(() -> new TicketNotFoundException("Ticket with ID: " + dto.getId() + " not found"));
         Ticket updatedTicket = TicketMapper.toEntity(dto);
         updatedTicket.setId(oldTicket.getId());
         updatedTicket.setOwner(oldTicket.getOwner());
@@ -84,7 +97,8 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public String changeTicketState(TicketStateChangeDto dto, Long userId) {
-        Ticket ticket = ticketRepository.findById(dto.getId()).orElseThrow();
+        Ticket ticket = ticketRepository.findById(dto.getId())
+                .orElseThrow(() -> new TicketNotFoundException("Ticket with ID: " + dto.getId() + " not found"));
         State oldState = ticket.getState();
         ticket.setState(State.valueOf(dto.getState()));
         ticketRepository.save(ticket);

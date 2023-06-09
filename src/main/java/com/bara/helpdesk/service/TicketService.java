@@ -4,12 +4,15 @@ import com.bara.helpdesk.dto.TicketCreateDto;
 import com.bara.helpdesk.dto.TicketEditDto;
 import com.bara.helpdesk.dto.TicketOutputDto;
 import com.bara.helpdesk.dto.TicketStateChangeDto;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface TicketService {
 
     List<TicketOutputDto> getAllTickets();
+
+    Page<TicketOutputDto> getAllSortedTickets(int page, int size, String columnName, String direction);
 
     TicketOutputDto getById(Long id);
 

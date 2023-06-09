@@ -1,5 +1,6 @@
 package com.bara.helpdesk.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,10 +10,13 @@ import lombok.Data;
 @AllArgsConstructor
 public class FeedbackInputDto {
 
-    private int rate;
+    @NotNull
+    private Integer rate;
 
+    @NotNull
     private String text;
 
+    @NotNull
     private Long ticketId;
 
 }

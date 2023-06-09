@@ -2,6 +2,8 @@ package com.bara.helpdesk.service.impl;
 
 import com.bara.helpdesk.dto.CommentInputDto;
 import com.bara.helpdesk.dto.CommentOutputDto;
+import com.bara.helpdesk.dto.exception.TicketNotFoundException;
+import com.bara.helpdesk.dto.exception.UserNotFoundException;
 import com.bara.helpdesk.entity.Comment;
 import com.bara.helpdesk.mapper.CommentMapper;
 import com.bara.helpdesk.repository.CommentRepository;
@@ -25,8 +27,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentOutputDto createComment(CommentInputDto dto, Long userId) {
         Comment comment = CommentMapper.toEntity(dto);
-                comment.setUser((userRepository.findById(userId).orElseThrow()));
-                comment.setTicket(ticketRepository.findById(dto.getTicketId()).orElseThrow());
+                comment.setUser((userRepository.findById(userId)
+                        .orElseThrow(() -> new UserNotFoundException("User with ID: " + userId + " not found"))));
+                comment.setTicket(ticketRepository.findById(dto.getTicketId())
+                        .orElseThrow(() -> new TicketNotFoundException("Ticket with ID:" + dto.getTicketId() + " not found")));
         return CommentMapper.toDto(commentRepository.save(comment));
     }
 

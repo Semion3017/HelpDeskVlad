@@ -1,15 +1,13 @@
 package com.bara.helpdesk.controller;
 
-import com.bara.helpdesk.dto.TicketCreateDto;
-import com.bara.helpdesk.dto.TicketEditDto;
-import com.bara.helpdesk.dto.TicketOutputDto;
-import com.bara.helpdesk.dto.TicketStateChangeDto;
+import com.bara.helpdesk.dto.*;
 import com.bara.helpdesk.security.CustomUserDetails;
 import com.bara.helpdesk.service.TicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +25,15 @@ public class TicketController {
     public ResponseEntity<List<TicketOutputDto>> getAllTickets() {
         return ResponseEntity.ok(ticketService.getAllTickets());
     }
+    @GetMapping("/all/s")
+    @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
+    public ResponseEntity<List<TicketOutputDto>> getAllTickets(
+            @RequestParam(required = true) int page,
+            @RequestParam int size,
+            @RequestParam String columnName,
+            @RequestParam String direction) {
+        return ResponseEntity.ok(ticketService.getAllSortedTickets(page, size, columnName, direction).getContent());
+    }
 
     @GetMapping("/my")
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
@@ -42,7 +49,7 @@ public class TicketController {
     @PostMapping
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER')")
     public ResponseEntity<TicketOutputDto> createTicket(
-            @RequestBody TicketCreateDto dto,
+            @Validated @RequestBody TicketCreateDto dto,
             @AuthenticationPrincipal CustomUserDetails customUserDetails
     )
     {
@@ -51,7 +58,7 @@ public class TicketController {
 
     @PutMapping
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER')")
-    public ResponseEntity<TicketOutputDto> updateTicket(@RequestBody TicketEditDto dto){
+    public ResponseEntity<TicketOutputDto> updateTicket(@Validated @RequestBody TicketEditDto dto){
         return ResponseEntity.ok(ticketService.updateTicket(dto));
     }
 

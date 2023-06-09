@@ -1,6 +1,7 @@
 package com.bara.helpdesk.service.impl;
 
 import com.bara.helpdesk.dto.HistoryOutputDto;
+import com.bara.helpdesk.dto.exception.UserNotFoundException;
 import com.bara.helpdesk.entity.History;
 import com.bara.helpdesk.entity.Ticket;
 import com.bara.helpdesk.entity.User;
@@ -52,7 +53,8 @@ public class HistoryServiceImpl implements HistoryService {
 
     @Override
     public String logStateChange(State oldState, Ticket ticket, Long userId) {
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with ID: " + userId + " not found"));
         History history = History.builder()
                 .user(user)
                 .action("Ticket state is changed")

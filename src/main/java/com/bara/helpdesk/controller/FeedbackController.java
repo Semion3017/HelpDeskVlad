@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,7 +20,7 @@ public class FeedbackController {
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER')")
-    public ResponseEntity createFeedback(FeedbackInputDto dto, @AuthenticationPrincipal CustomUserDetails customUserDetails){
+    public ResponseEntity<FeedbackOutputDto> createFeedback(@Validated @RequestBody FeedbackInputDto dto, @AuthenticationPrincipal CustomUserDetails customUserDetails){
         return ResponseEntity.ok(feedbackService.create(dto, customUserDetails.getId()));
     }
 

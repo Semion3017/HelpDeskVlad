@@ -31,13 +31,13 @@ import static org.springframework.boot.autoconfigure.security.servlet.PathReques
 public class SecurityConfiguration {
 
     @Bean
-    public UserDetailsService userDetailsService(UserRepository userRepository){
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> userRepository.findByEmail(username).map(CustomUserDetails::new)
                 .orElseThrow(() -> new UsernameNotFoundException("User with email " + username + " not found"));
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService){
+    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
@@ -57,20 +57,14 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider) throws Exception {
         http
-                .authorizeHttpRequests().requestMatchers("/h2-console/**").permitAll()
-                .and().csrf().ignoringRequestMatchers("/h2-console/**")
-                .and().headers().frameOptions().sameOrigin();
-
-        http
-                .authorizeHttpRequests().requestMatchers(toH2Console()).permitAll();
-        http
-                .csrf().ignoringRequestMatchers(toH2Console());
-
-        http
-                .csrf().disable().authorizeHttpRequests().requestMatchers( "/api/auth/**").permitAll()
+                .csrf().disable()
+                .authorizeHttpRequests().requestMatchers("/api/auth/**", "/api/test-controller/1").permitAll()
+                .and().authorizeHttpRequests().requestMatchers(toH2Console()).permitAll()
                 .anyRequest().authenticated()
+                .and().headers().frameOptions().sameOrigin()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and().authenticationProvider(authenticationProvider).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class).addFilterBefore(new CORSFilter(), CorsFilter.class);
+                .and().authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class).addFilterBefore(new CORSFilter(), CorsFilter.class);
 
         return http.build();
     }
