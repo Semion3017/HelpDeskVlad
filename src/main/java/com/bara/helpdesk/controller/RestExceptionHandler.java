@@ -59,6 +59,17 @@ public class RestExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(IllegalStateChangeException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateChange(IllegalStateChangeException e, WebRequest request){
+        LOGGER.error(IllegalStateChangeException.ILLEGAL_STATE_CHANGE, e);
+        ErrorResponse errorResponse = buildErrorResponse(
+                IllegalStateChangeException.ILLEGAL_STATE_CHANGE,
+                HttpStatus.FORBIDDEN,
+                request
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleInternalServerError(Exception e, WebRequest request) {
         if (e instanceof NullPointerException) {
@@ -67,7 +78,7 @@ public class RestExceptionHandler {
 
         ErrorResponse errorResponse = buildErrorResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, request);
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private ErrorResponse buildErrorResponse(String message, HttpStatus status, WebRequest request) {
