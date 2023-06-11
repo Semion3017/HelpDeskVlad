@@ -4,13 +4,14 @@ import com.bara.helpdesk.dto.TicketCreateDto;
 import com.bara.helpdesk.dto.TicketEditDto;
 import com.bara.helpdesk.dto.TicketOutputDto;
 import com.bara.helpdesk.dto.TicketStateChangeDto;
+import com.bara.helpdesk.security.CustomUserDetails;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface TicketService {
 
-    List<TicketOutputDto> getAllTickets();
+    List<TicketOutputDto> getAllTickets(CustomUserDetails userDetails);
 
     Page<TicketOutputDto> getAllSortedTickets(int page, int size, String columnName, String direction);
 
@@ -22,5 +23,5 @@ public interface TicketService {
 
     String changeTicketState(TicketStateChangeDto dto, Long userId);
 
-    List<TicketOutputDto> getByUserId(Long userId);
+    List<TicketOutputDto> getByUserId(CustomUserDetails userDetails);
 }

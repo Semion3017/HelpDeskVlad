@@ -44,9 +44,9 @@ public class HistoryServiceImpl implements HistoryService {
         History history = History.builder()
                 .ticket(ticket)
                 .user(ticket.getOwner())
-                .action("Ticket is created")
+                .action("Ticket is updated")
                 .date(LocalDateTime.now())
-                .description("Ticket is created")
+                .description("Ticket is updated")
                 .build();
         return historyRepository.save(history).getDescription();
     }

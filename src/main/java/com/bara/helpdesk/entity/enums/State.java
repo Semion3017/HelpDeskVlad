@@ -7,5 +7,17 @@ public enum State {
     DECLINED,
     IN_PROGRESS,
     DONE,
-    CANCELED
+    CANCELED;
+
+    public static String getActionName(State state) {
+        return switch (state) {
+            case DRAFT -> "Create";
+            case NEW -> "Submit";
+            case APPROVED -> "Approve";
+            case DECLINED -> "Decline";
+            case CANCELED -> "Cancel";
+            case IN_PROGRESS -> "Assign to Me";
+            case DONE -> "Done";
+        };
+    }
 }

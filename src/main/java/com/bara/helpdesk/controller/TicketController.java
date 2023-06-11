@@ -22,8 +22,8 @@ public class TicketController {
 
     @GetMapping("/all")
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
-    public ResponseEntity<List<TicketOutputDto>> getAllTickets() {
-        return ResponseEntity.ok(ticketService.getAllTickets());
+    public ResponseEntity<List<TicketOutputDto>> getAllTickets(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        return ResponseEntity.ok(ticketService.getAllTickets(customUserDetails));
     }
     @GetMapping("/all/s")
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
@@ -38,7 +38,7 @@ public class TicketController {
     @GetMapping("/my")
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
     public ResponseEntity<List<TicketOutputDto>> getUserTickets(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        return ResponseEntity.ok(ticketService.getByUserId(customUserDetails.getId()));
+        return ResponseEntity.ok(ticketService.getByUserId(customUserDetails));
     }
 
     @GetMapping("/{id}")
