@@ -21,7 +21,7 @@ public interface TicketService {
 
     TicketOutputDto updateTicket(TicketEditDto dto);
 
-    String changeTicketState(TicketStateChangeDto dto, Long userId);
+    TicketOutputDto changeTicketState(TicketStateChangeDto dto, Long userId);
 
     List<TicketOutputDto> getByUserId(CustomUserDetails userDetails);
 }

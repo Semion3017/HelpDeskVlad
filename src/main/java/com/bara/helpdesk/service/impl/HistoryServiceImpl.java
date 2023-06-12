@@ -9,7 +9,7 @@ import com.bara.helpdesk.entity.enums.State;
 import com.bara.helpdesk.repository.HistoryRepository;
 import com.bara.helpdesk.repository.UserRepository;
 import com.bara.helpdesk.service.HistoryService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class HistoryServiceImpl implements HistoryService {
     private final HistoryRepository historyRepository;
     private final UserRepository userRepository;

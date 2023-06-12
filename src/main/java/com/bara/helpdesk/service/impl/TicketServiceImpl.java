@@ -18,7 +18,9 @@ import com.bara.helpdesk.repository.TicketRepository;
 import com.bara.helpdesk.repository.UserRepository;
 import com.bara.helpdesk.security.CustomUserDetails;
 import com.bara.helpdesk.service.HistoryService;
+import com.bara.helpdesk.service.MailService;
 import com.bara.helpdesk.service.TicketService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +40,8 @@ public class TicketServiceImpl implements TicketService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final HistoryService historyService;
+    private final MailService mailService;
+
 
     @Override
     public List<TicketOutputDto> getAllTickets(CustomUserDetails userDetails) {
@@ -61,15 +65,13 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @Transactional
     public TicketOutputDto createTicket(TicketCreateDto dto, Long ownerId) {
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new CategoryNotFoundException("Category with ID: " + dto.getCategoryId() + " not found"));
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFoundException("User with ID: " + ownerId + " not found"));
         Ticket ticket = TicketMapper.toEntity(dto);
-        if (ticket.getState().equals(State.NEW)) {
-            //TODO send an email to all MANAGERS
-        }
         ticket.setCategory(category);
         ticket.setOwner(owner);
         Ticket createdTicket = ticketRepository.save(ticket);
@@ -84,7 +86,9 @@ public class TicketServiceImpl implements TicketService {
                         .ticket(ticket)
                         .build()
         );
-
+        if (createdTicket.getState().equals(State.NEW)) {
+            mailService.sendTicketStateChangeMessage(createdTicket, State.NEW);
+        }
         return createdTicketDto;
     }
 
@@ -104,15 +108,18 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public String changeTicketState(TicketStateChangeDto dto, Long userId) {
+    @Transactional
+    public TicketOutputDto changeTicketState(TicketStateChangeDto dto, Long userId) {
         Ticket ticket = ticketRepository.findById(dto.getId())
                 .orElseThrow(() -> new TicketNotFoundException("Ticket with ID: " + dto.getId() + " not found"));
         State oldState = ticket.getState();
         State newState = State.valueOf(dto.getState());
         User actor = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User with " + userId + " not found"));
-        processTicketStateChange(newState, actor, ticket);
-        ticketRepository.save(ticket);
-        return historyService.logStateChange(oldState, ticket, userId);
+        setTicketState(newState, actor, ticket);
+        Ticket savedTicket = ticketRepository.save(ticket);
+        historyService.logStateChange(oldState, ticket, userId);
+        mailService.sendTicketStateChangeMessage(ticket, oldState);
+        return TicketMapper.ToDto(savedTicket);
     }
 
     @Override
@@ -126,56 +133,45 @@ public class TicketServiceImpl implements TicketService {
                 }).collect(Collectors.toList());
     }
 
-    private void processTicketStateChange(State newState, User actor, Ticket ticket) {
+    private void setTicketState(State newState, User actor, Ticket ticket) throws IllegalStateChangeException {
         State oldState = ticket.getState();
         ticket.setState(newState);
         if ((newState == State.NEW | newState == State.CANCELED) && (oldState == State.DECLINED | oldState == State.DRAFT) && actor == ticket.getOwner()) {
-            //mail all managers
+
+        } else if (newState == State.DECLINED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
+
+        } else if (newState == State.CANCELED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
+
+        } else if (newState == State.CANCELED && oldState == State.APPROVED && Role.ENGINEER.equals(actor.getRole())) {
+
         } else if (newState == State.APPROVED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
             ticket.setApprover(actor);
-            //mail owner and all engineers
-        } else if (newState == State.DECLINED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
-            //mail owner
-        } else if (newState == State.CANCELED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
-            //mail owner
-        } else if (newState == State.CANCELED && oldState == State.APPROVED && Role.ENGINEER.equals(actor.getRole())) {
-            //mail owner and approver
         } else if (newState == State.IN_PROGRESS && oldState == State.APPROVED && Role.ENGINEER.equals(actor.getRole())) {
             ticket.setAssignee(actor);
-            //mail owner
-        } else if (newState == State.DONE && oldState == State.IN_PROGRESS && Role.ENGINEER.equals(actor.getRole())) {
-            //mail owner
-        } else {
+        } else if (newState != State.DONE || oldState != State.IN_PROGRESS || !Role.ENGINEER.equals(actor.getRole())) {
             throw new IllegalStateChangeException();
         }
     }
 
     private List<ActionDto> getTicketActions(Ticket ticket, CustomUserDetails userDetails) {
         if (ticket.getState() == State.DRAFT && ticket.getOwner().getId() == userDetails.getId()) {
-            return Arrays.asList(new ActionDto(State.NEW), new ActionDto(State.CANCELED));
+            return List.of(new ActionDto(State.NEW), new ActionDto(State.CANCELED));
 
         }
         if (ticket.getState() == State.NEW && userDetails.getRole() == Role.MANAGER && ticket.getOwner().getId() != userDetails.getId()) {
-            return Arrays.asList(new ActionDto(State.APPROVED), new ActionDto(State.CANCELED), new ActionDto(State.DECLINED));
+            return List.of(new ActionDto(State.APPROVED), new ActionDto(State.CANCELED), new ActionDto(State.DECLINED));
 
         }
         if (ticket.getState() == State.APPROVED && userDetails.getRole() == Role.ENGINEER) {
-            return Arrays.asList(new ActionDto(State.IN_PROGRESS), new ActionDto(State.CANCELED));
+            return List.of(new ActionDto(State.IN_PROGRESS), new ActionDto(State.CANCELED));
 
         }
         if (ticket.getState() == State.DECLINED && ticket.getOwner().getId() == userDetails.getId()) {
-            return Arrays.asList(new ActionDto(State.NEW), new ActionDto(State.CANCELED));
-            //Submit
-            //mail to all managers
-            //Cancel
+            return List.of(new ActionDto(State.NEW), new ActionDto(State.CANCELED));
         }
         if (ticket.getState() == State.IN_PROGRESS && ticket.getAssignee().getId() == userDetails.getId()) {
-            return Arrays.asList(new ActionDto(State.DONE));
-            //Done
-            //Mail to owner
-            //also when owner left feedback, mail to assignee
+            return List.of(new ActionDto(State.DONE));
         }
-        return Arrays.asList();
+        return List.of();
     }
-
 }
