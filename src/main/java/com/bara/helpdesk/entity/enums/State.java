@@ -1,23 +1,21 @@
 package com.bara.helpdesk.entity.enums;
 
-public enum State {
-    DRAFT,
-    NEW,
-    APPROVED,
-    DECLINED,
-    IN_PROGRESS,
-    DONE,
-    CANCELED;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-    public static String getActionName(State state) {
-        return switch (state) {
-            case DRAFT -> "Create";
-            case NEW -> "Submit";
-            case APPROVED -> "Approve";
-            case DECLINED -> "Decline";
-            case CANCELED -> "Cancel";
-            case IN_PROGRESS -> "Assign to Me";
-            case DONE -> "Done";
-        };
+@RequiredArgsConstructor
+public enum State {
+    DRAFT("Create"),
+    NEW("Submit"),
+    APPROVED("Approve"),
+    DECLINED("Decline"),
+    IN_PROGRESS("Assign to Me"),
+    DONE("Done"),
+    CANCELED("Cancel");
+
+    private final String action;
+
+    public static String getAction(State state){
+        return state.action;
     }
 }

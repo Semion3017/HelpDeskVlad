@@ -14,7 +14,7 @@ public class ActionDto {
     private String state;
 
     public ActionDto (State state) {
-       this.name = State.getActionName(state);
+       this.name = State.getAction(state);
        this.state = state.toString();
     }
 }
