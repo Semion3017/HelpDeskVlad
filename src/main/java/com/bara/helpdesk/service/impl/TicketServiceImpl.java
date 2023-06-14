@@ -16,6 +16,7 @@ import com.bara.helpdesk.repository.CategoryRepository;
 import com.bara.helpdesk.repository.CommentRepository;
 import com.bara.helpdesk.repository.TicketRepository;
 import com.bara.helpdesk.repository.UserRepository;
+import com.bara.helpdesk.repository.specification.ticket.TicketSpecifications;
 import com.bara.helpdesk.security.CustomUserDetails;
 import com.bara.helpdesk.service.HistoryService;
 import com.bara.helpdesk.service.MailService;
@@ -54,13 +55,22 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public Page<TicketOutputDto> getAllSortedTickets(int page, int size, String columnName, String direction) {
-        Sort.Direction sortDirection = direction.equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        return ticketRepository.findAll(PageRequest.of(page, size, Sort.by(sortDirection, columnName))).map(TicketMapper::ToDto);
+    public Page<TicketOutputDto> getAllSortedTickets(SortTicketParametersDto params, CustomUserDetails userDetails) {
+        User user = userRepository.findById(userDetails.getId()).orElseThrow(() -> new UserNotFoundException("User with " +userDetails.getId() + " not found"));
+        Sort.Direction sortDirection = params.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+//        return ticketRepository.findAllSortedByKeyword(PageRequest.of(page, size, Sort.by(sortDirection, columnName)), keyword).map(TicketMapper::ToDto);
+        return ticketRepository.findAll(
+                TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(
+                        params.getKeyword())),
+                        PageRequest.of(params.getPage(), params.getSize(), Sort.by(sortDirection, params.getColumnName()))
+                )
+                .map(TicketMapper::ToDto);
+
     }
 
     @Override
     public TicketOutputDto getById(Long id) {
+        Ticket ticket = new Ticket();
         return ticketRepository.findById(id).map(TicketMapper::ToDto).orElseThrow(() -> new TicketNotFoundException("Ticket with ID: " + id + " not found"));
     }
 
@@ -156,15 +166,12 @@ public class TicketServiceImpl implements TicketService {
     private List<ActionDto> getTicketActions(Ticket ticket, CustomUserDetails userDetails) {
         if (ticket.getState() == State.DRAFT && ticket.getOwner().getId() == userDetails.getId()) {
             return List.of(new ActionDto(State.NEW), new ActionDto(State.CANCELED));
-
         }
         if (ticket.getState() == State.NEW && userDetails.getRole() == Role.MANAGER && ticket.getOwner().getId() != userDetails.getId()) {
             return List.of(new ActionDto(State.APPROVED), new ActionDto(State.CANCELED), new ActionDto(State.DECLINED));
-
         }
         if (ticket.getState() == State.APPROVED && userDetails.getRole() == Role.ENGINEER) {
             return List.of(new ActionDto(State.IN_PROGRESS), new ActionDto(State.CANCELED));
-
         }
         if (ticket.getState() == State.DECLINED && ticket.getOwner().getId() == userDetails.getId()) {
             return List.of(new ActionDto(State.NEW), new ActionDto(State.CANCELED));

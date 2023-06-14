@@ -40,6 +40,7 @@ public class TicketMapper {
                 .createdOn(LocalDate.now())
                 .desiredResolutionDate(dto.getDesiredDate())
                 .urgency(Urgency.valueOf(dto.getUrgency()))
+                .urgencyNumber(Urgency.valueOf(dto.getUrgency()).ordinal())
                 .state(state)
                 .build();
     }
@@ -54,6 +55,7 @@ public class TicketMapper {
                 .description(dto.getDescription())
                 .desiredResolutionDate(dto.getDesiredDate())
                 .urgency(Urgency.valueOf(dto.getUrgency()))
+                .urgencyNumber(Urgency.valueOf(dto.getUrgency()).ordinal())
                 .state(state)
                 .build();
     }

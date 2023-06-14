@@ -53,14 +53,14 @@ public class RestExceptionHandler {
     }
 
     @ExceptionHandler(PasswordRequirementsException.class)
-    public ResponseEntity<ErrorResponse> handlePasswordRequirementsException(PasswordRequirementsException e, WebRequest request){
+    public ResponseEntity<ErrorResponse> handlePasswordRequirementsException(PasswordRequirementsException e, WebRequest request) {
         LOGGER.error(PasswordRequirementsException.PASSWORD_REQUIREMENTS_NOT_MET, e);
         ErrorResponse errorResponse = buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST, request);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalStateChangeException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalStateChange(IllegalStateChangeException e, WebRequest request){
+    public ResponseEntity<ErrorResponse> handleIllegalStateChange(IllegalStateChangeException e, WebRequest request) {
         LOGGER.error(IllegalStateChangeException.ILLEGAL_STATE_CHANGE, e);
         ErrorResponse errorResponse = buildErrorResponse(
                 IllegalStateChangeException.ILLEGAL_STATE_CHANGE,
@@ -75,7 +75,7 @@ public class RestExceptionHandler {
         if (e instanceof NullPointerException) {
             return new ResponseEntity<>(buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST, request), HttpStatus.BAD_REQUEST);
         }
-
+        LOGGER.error(e.getMessage(), e);
         ErrorResponse errorResponse = buildErrorResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, request);
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);

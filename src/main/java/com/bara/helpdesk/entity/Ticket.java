@@ -40,15 +40,18 @@ public class Ticket {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     private State state;
 
     @OneToOne
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     private Urgency urgency;
+
+    @Column(name = "urgency_number")
+    private Integer urgencyNumber;
 
     @OneToOne
     @JoinColumn(name = "approver_id")
