@@ -17,6 +17,20 @@ public class RestExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestExceptionHandler.class);
 
+    @ExceptionHandler(FileSizeException.class)
+    public ResponseEntity<ErrorResponse> handleFileSizeExceptionException(FileSizeException e, WebRequest request) {
+        LOGGER.error(FileSizeException.ILLEGAL_FILE_SIZE, e);
+        ErrorResponse errorResponse = buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST, request);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalFileExtensionException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalFileExtensionException(IllegalFileExtensionException e, WebRequest request) {
+        LOGGER.error(IllegalFileExtensionException.ILLEGAL_FILE_EXTENSION, e);
+        ErrorResponse errorResponse = buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST, request);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(FeedbackNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleFeedbackNotFoundException(FeedbackNotFoundException e, WebRequest request) {
         LOGGER.error(FeedbackNotFoundException.FEEDBACK_NOT_FOUND, e);
@@ -59,11 +73,11 @@ public class RestExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(IllegalStateChangeException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalStateChange(IllegalStateChangeException e, WebRequest request) {
-        LOGGER.error(IllegalStateChangeException.ILLEGAL_STATE_CHANGE, e);
+    @ExceptionHandler(IllegalActionException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateChange(IllegalActionException e, WebRequest request) {
+        LOGGER.error(IllegalActionException.ILLEGAL_ACTION, e);
         ErrorResponse errorResponse = buildErrorResponse(
-                IllegalStateChangeException.ILLEGAL_STATE_CHANGE,
+                IllegalActionException.ILLEGAL_ACTION,
                 HttpStatus.FORBIDDEN,
                 request
         );

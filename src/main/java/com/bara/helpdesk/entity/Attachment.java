@@ -2,10 +2,12 @@ package com.bara.helpdesk.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -14,8 +16,8 @@ public class Attachment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ticket_id")
-    private Long ticket_id;
+    @Column(name = "id")
+    private Long id;
 
     @Lob
     @Column(name = "blob", columnDefinition = "BLOB")
@@ -23,6 +25,9 @@ public class Attachment {
 
     @Column(name = "name")
     private String name;
+
+    @Column(name = "ticket_id")
+    private Long ticketId;
 
 
 }

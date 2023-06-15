@@ -20,23 +20,23 @@ public class TicketController {
 
     private final TicketService ticketService;
 
-    @GetMapping("/all")
-    @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
-    public ResponseEntity<List<TicketOutputDto>> getAllTickets(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        return ResponseEntity.ok(ticketService.getAllTickets(customUserDetails));
-    }
+//    @GetMapping("/all")
+//    @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
+//    public ResponseEntity<List<TicketOutputDto>> getAllTickets(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+//        return ResponseEntity.ok(ticketService.getAllTickets(customUserDetails));
+//    }
 
-    @GetMapping("/all/s")
+    @GetMapping("/all")
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
     public ResponseEntity<List<TicketOutputDto>> getAllTickets(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(required = true, defaultValue = "0") Integer page,
+            @RequestParam(required = true, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
             @RequestParam(required = false, defaultValue = "id") String columnName,
             @RequestParam(required = false, defaultValue = "asc") String direction,
             @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestParam(required = false, defaultValue = "true") Boolean isAll) {
-        SortTicketParametersDto params = SortTicketParametersDto.builder()
+            SortTicketParametersDto params = SortTicketParametersDto.builder()
                 .page(page)
                 .size(size)
                 .columnName(columnName)
@@ -46,11 +46,11 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.getAllSortedTickets(params, userDetails).getContent());
     }
 
-    @GetMapping("/my")
-    @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
-    public ResponseEntity<List<TicketOutputDto>> getUserTickets(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        return ResponseEntity.ok(ticketService.getByUserId(customUserDetails));
-    }
+//    @GetMapping("/my")
+//    @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
+//    public ResponseEntity<List<TicketOutputDto>> getUserTickets(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+//        return ResponseEntity.ok(ticketService.getByUserId(customUserDetails));
+//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<TicketOutputDto> getTicketById(@PathVariable Long id) {

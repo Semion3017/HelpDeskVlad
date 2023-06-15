@@ -13,10 +13,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     @GetMapping
-    @CrossOrigin(origins = {"*"})
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER')")
     public ResponseEntity<CategoryDto> sayHello(){
         return ResponseEntity.ok(CategoryDto.builder().name("HELLO FROM SECURED ENDPOINT").build());
+    }
+
+    @GetMapping("/1")
+    public ResponseEntity<String> s(){
+        String str = "1111111";
+        Integer inte = null;
+        return ResponseEntity.ok(inte.toString());
     }
 
 }

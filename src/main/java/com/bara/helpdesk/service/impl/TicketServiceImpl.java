@@ -2,7 +2,7 @@ package com.bara.helpdesk.service.impl;
 
 import com.bara.helpdesk.dto.*;
 import com.bara.helpdesk.dto.exception.CategoryNotFoundException;
-import com.bara.helpdesk.dto.exception.IllegalStateChangeException;
+import com.bara.helpdesk.dto.exception.IllegalActionException;
 import com.bara.helpdesk.dto.exception.TicketNotFoundException;
 import com.bara.helpdesk.dto.exception.UserNotFoundException;
 import com.bara.helpdesk.entity.Category;
@@ -60,11 +60,15 @@ public class TicketServiceImpl implements TicketService {
         Sort.Direction sortDirection = params.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
 //        return ticketRepository.findAllSortedByKeyword(PageRequest.of(page, size, Sort.by(sortDirection, columnName)), keyword).map(TicketMapper::ToDto);
         return ticketRepository.findAll(
-                TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(
-                        params.getKeyword())),
-                        PageRequest.of(params.getPage(), params.getSize(), Sort.by(sortDirection, params.getColumnName()))
+                    TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword())),
+                    PageRequest.of(params.getPage() - 1, params.getSize(), Sort.by(sortDirection, params.getColumnName()))
                 )
-                .map(TicketMapper::ToDto);
+                .map(ticket -> {
+                    List<ActionDto> actions = getTicketActions(ticket, userDetails);
+                    TicketOutputDto dto = TicketMapper.ToDto(ticket);
+                    dto.setActions(actions);
+                    return dto;
+                });
 
     }
 
@@ -143,15 +147,15 @@ public class TicketServiceImpl implements TicketService {
                 }).collect(Collectors.toList());
     }
 
-    private void setTicketState(State newState, User actor, Ticket ticket) throws IllegalStateChangeException {
+    private void setTicketState(State newState, User actor, Ticket ticket) throws IllegalActionException {
         State oldState = ticket.getState();
         ticket.setState(newState);
         if ((newState == State.NEW | newState == State.CANCELED) && (oldState == State.DECLINED | oldState == State.DRAFT) && actor == ticket.getOwner()) {
 
         } else if (newState == State.DECLINED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
-
+            ticket.setApprover(actor);
         } else if (newState == State.CANCELED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
-
+            ticket.setApprover(actor);
         } else if (newState == State.CANCELED && oldState == State.APPROVED && Role.ENGINEER.equals(actor.getRole())) {
 
         } else if (newState == State.APPROVED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
@@ -159,7 +163,7 @@ public class TicketServiceImpl implements TicketService {
         } else if (newState == State.IN_PROGRESS && oldState == State.APPROVED && Role.ENGINEER.equals(actor.getRole())) {
             ticket.setAssignee(actor);
         } else if (newState != State.DONE || oldState != State.IN_PROGRESS || !Role.ENGINEER.equals(actor.getRole())) {
-            throw new IllegalStateChangeException();
+            throw new IllegalActionException();
         }
     }
 

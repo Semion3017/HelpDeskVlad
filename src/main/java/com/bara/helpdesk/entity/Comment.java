@@ -31,7 +31,7 @@ public class Comment {
     @Column(name = "date")
     private LocalDateTime date;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "ticket_id")
     private Ticket ticket;
 

@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -57,6 +58,7 @@ public class Ticket {
     @JoinColumn(name = "approver_id")
     private User approver;
 
-    @OneToOne
-    private Attachment attachment;
+    @OneToMany
+    @JoinColumn(name = "ticket_id")
+    private List<Attachment> attachments;
 }
