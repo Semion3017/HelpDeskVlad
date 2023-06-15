@@ -5,10 +5,7 @@ import com.bara.helpdesk.dto.exception.CategoryNotFoundException;
 import com.bara.helpdesk.dto.exception.IllegalActionException;
 import com.bara.helpdesk.dto.exception.TicketNotFoundException;
 import com.bara.helpdesk.dto.exception.UserNotFoundException;
-import com.bara.helpdesk.entity.Category;
-import com.bara.helpdesk.entity.Comment;
-import com.bara.helpdesk.entity.Ticket;
-import com.bara.helpdesk.entity.User;
+import com.bara.helpdesk.entity.*;
 import com.bara.helpdesk.entity.enums.Role;
 import com.bara.helpdesk.entity.enums.State;
 import com.bara.helpdesk.mapper.TicketMapper;
@@ -55,13 +52,14 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public Page<TicketOutputDto> getAllSortedTickets(SortTicketParametersDto params, CustomUserDetails userDetails) {
-        User user = userRepository.findById(userDetails.getId()).orElseThrow(() -> new UserNotFoundException("User with " +userDetails.getId() + " not found"));
+    public PageOutputDto<TicketOutputDto> getAllSortedTickets(SortTicketParametersDto params, CustomUserDetails userDetails) {
+        User user = userRepository.findById(userDetails.getId()).orElseThrow(() -> new UserNotFoundException("User with " + userDetails.getId() + " not found"));
         Sort.Direction sortDirection = params.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
 //        return ticketRepository.findAllSortedByKeyword(PageRequest.of(page, size, Sort.by(sortDirection, columnName)), keyword).map(TicketMapper::ToDto);
-        return ticketRepository.findAll(
-                    TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword())),
-                    PageRequest.of(params.getPage() - 1, params.getSize(), Sort.by(sortDirection, params.getColumnName()))
+        Integer count = ticketRepository.findAll(TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword()))).size();
+        Page<TicketOutputDto> page = ticketRepository.findAll(
+                        TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword())),
+                        PageRequest.of(params.getPage() - 1, params.getSize(), Sort.by(sortDirection, params.getColumnName(), Ticket_.DESIRED_RESOLUTION_DATE))
                 )
                 .map(ticket -> {
                     List<ActionDto> actions = getTicketActions(ticket, userDetails);
@@ -69,7 +67,7 @@ public class TicketServiceImpl implements TicketService {
                     dto.setActions(actions);
                     return dto;
                 });
-
+        return new PageOutputDto<TicketOutputDto>(page.getContent(), count);
     }
 
     @Override
@@ -108,10 +106,13 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public TicketOutputDto updateTicket(TicketEditDto dto) {
-        Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new CategoryNotFoundException("Category with ID: " + dto.getCategoryId() + " not found"));
         Ticket oldTicket = ticketRepository.findById(dto.getId())
                 .orElseThrow(() -> new TicketNotFoundException("Ticket with ID: " + dto.getId() + " not found"));
+        if (State.DRAFT != oldTicket.getState()){
+            throw new IllegalActionException();
+        }
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new CategoryNotFoundException("Category with ID: " + dto.getCategoryId() + " not found"));
         Ticket updatedTicket = TicketMapper.toEntity(dto);
         updatedTicket.setId(oldTicket.getId());
         updatedTicket.setOwner(oldTicket.getOwner());

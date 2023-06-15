@@ -28,11 +28,11 @@ public class TicketController {
 
     @GetMapping("/all")
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
-    public ResponseEntity<List<TicketOutputDto>> getAllTickets(
+    public ResponseEntity<PageOutputDto<TicketOutputDto>> getAllTickets(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = true, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,
-            @RequestParam(required = false, defaultValue = "id") String columnName,
+            @RequestParam(required = false, defaultValue = "urgencyNumber") String columnName,
             @RequestParam(required = false, defaultValue = "asc") String direction,
             @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestParam(required = false, defaultValue = "true") Boolean isAll) {
@@ -43,7 +43,7 @@ public class TicketController {
                 .direction(direction)
                 .keyword(keyword)
                 .isAll(isAll).build();
-        return ResponseEntity.ok(ticketService.getAllSortedTickets(params, userDetails).getContent());
+        return ResponseEntity.ok(ticketService.getAllSortedTickets(params, userDetails));
     }
 
 //    @GetMapping("/my")

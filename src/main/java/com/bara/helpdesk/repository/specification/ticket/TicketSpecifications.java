@@ -41,12 +41,10 @@ public class TicketSpecifications {
     public static Specification<Ticket> ticketFieldsLikeKeyword(String keyword) {
         String key = "%" + keyword.toLowerCase() + "%";
         return (root, query, cb) -> cb.or(
-                cb.like(cb.lower(root.get(Ticket_.STATE).as(String.class)), key),
+                cb.like(cb.lower(root.get(Ticket_.NAME).as(String.class)), key),
                 cb.like(root.get(Ticket_.DESIRED_RESOLUTION_DATE), key),
                 cb.like(cb.lower(root.get(Ticket_.URGENCY).as(String.class)), key),
                 cb.like(cb.lower(root.get(Ticket_.STATE).as(String.class)), key)
         );
     }
-
-
 }
