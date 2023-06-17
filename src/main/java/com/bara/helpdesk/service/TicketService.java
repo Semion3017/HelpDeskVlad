@@ -1,6 +1,7 @@
 package com.bara.helpdesk.service;
 
 import com.bara.helpdesk.dto.*;
+import com.bara.helpdesk.entity.Ticket;
 import com.bara.helpdesk.security.CustomUserDetails;
 
 import java.util.List;
@@ -11,13 +12,13 @@ public interface TicketService {
 
     PageOutputDto<TicketOutputDto> getAllSortedTickets(SortTicketParametersDto params, CustomUserDetails userDetails);
 
-    TicketOutputDto getById(Long id);
+    TicketOutputDto getDtoById(Long id);
+
+    Ticket getById(Long id);
 
     TicketOutputDto createTicket(TicketCreateDto ticketDto, Long id);
 
     TicketOutputDto updateTicket(TicketEditDto dto);
 
     TicketOutputDto changeTicketState(TicketStateChangeDto dto, Long userId);
-
-    List<TicketOutputDto> getByUserId(CustomUserDetails userDetails);
 }

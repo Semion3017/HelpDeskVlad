@@ -51,7 +51,7 @@ public class AuthenticationService {
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()) // todo controller advice
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
         String jwtToken = generateToken(request.getEmail());
         return AuthenticationResponse.builder().token(jwtToken).build();
@@ -68,11 +68,12 @@ public class AuthenticationService {
                 userDetailsService.loadUserByUsername(email)
         );
     }
-        private String validate(String password){
-            Matcher matcher = pattern.matcher(password);
-            if (!matcher.matches()){
-                throw new PasswordRequirementsException();
-            }
-            return password;
+
+    private String validate(String password) {
+        Matcher matcher = pattern.matcher(password);
+        if (!matcher.matches()) {
+            throw new PasswordRequirementsException();
         }
+        return password;
+    }
 }

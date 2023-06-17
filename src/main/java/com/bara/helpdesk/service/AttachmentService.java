@@ -11,7 +11,11 @@ import java.util.List;
 public interface AttachmentService {
     List<AttachmentOutputDto> getAllByTicketId(Long id);
 
-    AttachmentOutputDto save(Long ticketId, MultipartFile file, CustomUserDetails customUserDetails);
+    void saveAllAttachments(Long ticketId, List<MultipartFile> files);
+
+    void validatedSaveAllAttachments(CustomUserDetails userDetails, Long ticketId, List<MultipartFile> files);
 
     ResponseEntity<Resource> getById(Long id);
+
+    String deleteAllById(List<Long> idList, Long ticketId, CustomUserDetails userDetails);
 }

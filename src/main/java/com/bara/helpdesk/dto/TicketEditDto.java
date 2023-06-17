@@ -28,9 +28,4 @@ public class TicketEditDto {
 
     @NotNull
     private LocalDate desiredDate;
-
-    @NotNull
-    private String state;
-
-    //TODO add attachment
 }

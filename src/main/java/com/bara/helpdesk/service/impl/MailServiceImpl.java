@@ -3,8 +3,8 @@ package com.bara.helpdesk.service.impl;
 import com.bara.helpdesk.entity.Ticket;
 import com.bara.helpdesk.entity.enums.Role;
 import com.bara.helpdesk.entity.enums.State;
-import com.bara.helpdesk.repository.UserRepository;
 import com.bara.helpdesk.service.MailService;
+import com.bara.helpdesk.service.UserService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
@@ -29,76 +29,86 @@ public class MailServiceImpl implements MailService {
 
     private final TemplateEngine htmlTemplateEngine;
     private final JavaMailSender mailSender;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @Override
     @Async
     public void sendTicketStateChangeMessage(Ticket ticket, State oldState) {
         State newState = ticket.getState();
-        if (newState == State.NEW) {
-            MessageData messageData = MessageData.builder()
-                    .messageSubject("New ticket for approval")
-                    .ticket(ticket)
-                    .template("TicketForApprovalTemplate")
-                    .build();
-            userRepository.findByRole(Role.MANAGER).forEach(manager -> {
-                sendSimpleTicketMessage(messageData, manager.getEmail());
-            });
-        } else if (newState == State.APPROVED) {
-            MessageData messageData = MessageData.builder()
-                    .messageSubject("New approved ticket")
-                    .ticket(ticket)
-                    .template("NewApprovedTicketTemplate")
-                    .build();
-            userRepository.findByRole(Role.ENGINEER).forEach(engineer -> {
-                sendSimpleTicketMessage(messageData, engineer.getEmail());
-            });
-            messageData.setTemplate("TicketWasApprovedTemplate");
-            messageData.setUsername(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName());
-            sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
-        } else if (newState == State.DECLINED) {
-            MessageData messageData = MessageData.builder()
-                    .messageSubject("Your ticket was declined")
-                    .username(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName())
-                    .ticket(ticket)
-                    .template("TicketWasDeclinedTemplate")
-                    .build();
-            sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
-        } else if (newState == State.CANCELED && oldState == State.NEW) {
-            MessageData messageData = MessageData.builder()
-                    .messageSubject("Your ticket was canceled")
-                    .username(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName())
-                    .ticket(ticket)
-                    .template("TicketWasCanceledByManagerTemplate")
-                    .build();
-            sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
-        } else if (newState == State.CANCELED && oldState == State.APPROVED) {
-            MessageData messageData = MessageData.builder()
-                    .messageSubject("Your ticket was canceled")
-                    .username(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName())
-                    .ticket(ticket)
-                    .template("TicketWasCanceledByEngineerTemplate")
-                    .build();
-            sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
-            messageData.setUsername(ticket.getApprover().getFirstName() + " " + ticket.getApprover().getLastName());
-            messageData.setMessageSubject("Ticket was Canceled");
-            sendSimpleTicketMessage(messageData, ticket.getApprover().getEmail());
-        } else if (newState == State.IN_PROGRESS) {
-            MessageData messageData = MessageData.builder()
-                    .messageSubject("Your ticket was taken to processing")
-                    .username(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName())
-                    .ticket(ticket)
-                    .template("TicketWasTakenToProcessingTemplate")
-                    .build();
-            sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
-        } else if (newState == State.DONE) {
-            MessageData messageData = MessageData.builder()
-                    .messageSubject("Your ticket was done")
-                    .username(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName())
-                    .ticket(ticket)
-                    .template("TicketWasDoneTemplate")
-                    .build();
-            sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
+        switch (newState) {
+            case NEW -> {
+                MessageData messageData = MessageData.builder()
+                        .messageSubject("New ticket for approval")
+                        .ticket(ticket)
+                        .template("TicketForApprovalTemplate")
+                        .build();
+                userService.getByRole(Role.MANAGER).forEach(manager -> {
+                    sendSimpleTicketMessage(messageData, manager.getEmail());
+                });
+            }
+            case APPROVED -> {
+                MessageData messageData = MessageData.builder()
+                        .messageSubject("New approved ticket")
+                        .ticket(ticket)
+                        .template("NewApprovedTicketTemplate")
+                        .build();
+                userService.getByRole(Role.ENGINEER).forEach(engineer -> {
+                    sendSimpleTicketMessage(messageData, engineer.getEmail());
+                });
+                messageData.setTemplate("TicketWasApprovedTemplate");
+                messageData.setUsername(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName());
+                sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
+            }
+            case DECLINED -> {
+                MessageData messageData = MessageData.builder()
+                        .messageSubject("Your ticket was declined")
+                        .username(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName())
+                        .ticket(ticket)
+                        .template("TicketWasDeclinedTemplate")
+                        .build();
+                sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
+            }
+            case CANCELED -> {
+                if (State.NEW.equals(oldState)) {
+                    MessageData messageData = MessageData.builder()
+                            .messageSubject("Your ticket was canceled")
+                            .username(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName())
+                            .ticket(ticket)
+                            .template("TicketWasCanceledByManagerTemplate")
+                            .build();
+                    sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
+                }
+                if (State.APPROVED.equals(oldState)) {
+                    MessageData messageData = MessageData.builder()
+                            .messageSubject("Your ticket was canceled")
+                            .username(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName())
+                            .ticket(ticket)
+                            .template("TicketWasCanceledByEngineerTemplate")
+                            .build();
+                    sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
+                    messageData.setUsername(ticket.getApprover().getFirstName() + " " + ticket.getApprover().getLastName());
+                    messageData.setMessageSubject("Ticket was Canceled");
+                    sendSimpleTicketMessage(messageData, ticket.getApprover().getEmail());
+                }
+            }
+            case IN_PROGRESS -> {
+                MessageData messageData = MessageData.builder()
+                        .messageSubject("Your ticket was taken to processing")
+                        .username(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName())
+                        .ticket(ticket)
+                        .template("TicketWasTakenToProcessingTemplate")
+                        .build();
+                sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
+            }
+            case DONE -> {
+                MessageData messageData = MessageData.builder()
+                        .messageSubject("Your ticket was done")
+                        .username(ticket.getOwner().getFirstName() + " " + ticket.getOwner().getLastName())
+                        .ticket(ticket)
+                        .template("TicketWasDoneTemplate")
+                        .build();
+                sendSimpleTicketMessage(messageData, ticket.getOwner().getEmail());
+            }
         }
     }
 

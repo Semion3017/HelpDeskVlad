@@ -20,13 +20,15 @@ public class FeedbackController {
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER')")
-    public ResponseEntity<FeedbackOutputDto> createFeedback(@Validated @RequestBody FeedbackInputDto dto, @AuthenticationPrincipal CustomUserDetails customUserDetails){
-        return ResponseEntity.ok(feedbackService.create(dto, customUserDetails.getId()));
+    public FeedbackOutputDto createFeedback(
+            @Validated @RequestBody FeedbackInputDto dto,
+            @AuthenticationPrincipal CustomUserDetails userDetails){
+        return feedbackService.create(dto, userDetails.getId());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<FeedbackOutputDto> getFeedbackByTicketId(@PathVariable Long id){
-        return ResponseEntity.ok(feedbackService.getByTicketId(id));
+    public FeedbackOutputDto getFeedbackByTicketId(@PathVariable Long id){
+        return feedbackService.getByTicketId(id);
     }
 }

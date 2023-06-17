@@ -1,6 +1,5 @@
 package com.bara.helpdesk.entity.enums;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

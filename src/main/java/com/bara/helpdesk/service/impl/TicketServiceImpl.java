@@ -1,23 +1,18 @@
 package com.bara.helpdesk.service.impl;
 
 import com.bara.helpdesk.dto.*;
-import com.bara.helpdesk.dto.exception.CategoryNotFoundException;
 import com.bara.helpdesk.dto.exception.IllegalActionException;
 import com.bara.helpdesk.dto.exception.TicketNotFoundException;
-import com.bara.helpdesk.dto.exception.UserNotFoundException;
 import com.bara.helpdesk.entity.*;
 import com.bara.helpdesk.entity.enums.Role;
 import com.bara.helpdesk.entity.enums.State;
 import com.bara.helpdesk.mapper.TicketMapper;
-import com.bara.helpdesk.repository.CategoryRepository;
 import com.bara.helpdesk.repository.CommentRepository;
 import com.bara.helpdesk.repository.TicketRepository;
-import com.bara.helpdesk.repository.UserRepository;
 import com.bara.helpdesk.repository.specification.ticket.TicketSpecifications;
 import com.bara.helpdesk.security.CustomUserDetails;
-import com.bara.helpdesk.service.HistoryService;
-import com.bara.helpdesk.service.MailService;
-import com.bara.helpdesk.service.TicketService;
+import com.bara.helpdesk.service.*;
+import jakarta.persistence.criteria.Order;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,9 +29,9 @@ import java.util.stream.Collectors;
 public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
-    private final CategoryRepository categoryRepository;
-    private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final CategoryService categoryService;
+    private final UserService userService;
     private final HistoryService historyService;
     private final MailService mailService;
 
@@ -53,36 +48,41 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public PageOutputDto<TicketOutputDto> getAllSortedTickets(SortTicketParametersDto params, CustomUserDetails userDetails) {
-        User user = userRepository.findById(userDetails.getId()).orElseThrow(() -> new UserNotFoundException("User with " + userDetails.getId() + " not found"));
+        User user = userService.getById(userDetails.getId());
         Sort.Direction sortDirection = params.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-//        return ticketRepository.findAllSortedByKeyword(PageRequest.of(page, size, Sort.by(sortDirection, columnName)), keyword).map(TicketMapper::ToDto);
-        Integer count = ticketRepository.findAll(TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword()))).size();
+        Sort.Order paramsOrder = new Sort.Order(sortDirection, params.getColumnName());
+        Sort.Order desiredDateOrder = new Sort.Order(Sort.Direction.ASC, Ticket_.DESIRED_RESOLUTION_DATE);
+        Integer count = ticketRepository
+                .findAll(TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword())))
+                .size();
         Page<TicketOutputDto> page = ticketRepository.findAll(
                         TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword())),
-                        PageRequest.of(params.getPage() - 1, params.getSize(), Sort.by(sortDirection, params.getColumnName(), Ticket_.DESIRED_RESOLUTION_DATE))
-                )
+                        PageRequest.of(params.getPage() - 1, params.getSize(), Sort.by(paramsOrder, desiredDateOrder)))
                 .map(ticket -> {
                     List<ActionDto> actions = getTicketActions(ticket, userDetails);
                     TicketOutputDto dto = TicketMapper.ToDto(ticket);
                     dto.setActions(actions);
                     return dto;
                 });
-        return new PageOutputDto<TicketOutputDto>(page.getContent(), count);
+        return new PageOutputDto<>(page.getContent(), count);
     }
 
     @Override
-    public TicketOutputDto getById(Long id) {
-        Ticket ticket = new Ticket();
-        return ticketRepository.findById(id).map(TicketMapper::ToDto).orElseThrow(() -> new TicketNotFoundException("Ticket with ID: " + id + " not found"));
+    public TicketOutputDto getDtoById(Long id) {
+        return TicketMapper.ToDto(getById(id));
+    }
+
+    @Override
+    public Ticket getById(Long id) {
+        return ticketRepository.findById(id)
+                .orElseThrow(() -> new TicketNotFoundException("Ticket with ID: " + id + " not found"));
     }
 
     @Override
     @Transactional
     public TicketOutputDto createTicket(TicketCreateDto dto, Long ownerId) {
-        Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new CategoryNotFoundException("Category with ID: " + dto.getCategoryId() + " not found"));
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new UserNotFoundException("User with ID: " + ownerId + " not found"));
+        Category category = categoryService.getById(dto.getCategoryId());
+        User owner = userService.getById(ownerId);
         Ticket ticket = TicketMapper.toEntity(dto);
         ticket.setCategory(category);
         ticket.setOwner(owner);
@@ -98,21 +98,16 @@ public class TicketServiceImpl implements TicketService {
                         .ticket(ticket)
                         .build()
         );
-        if (createdTicket.getState().equals(State.NEW)) {
-            mailService.sendTicketStateChangeMessage(createdTicket, State.NEW);
-        }
         return createdTicketDto;
     }
 
     @Override
     public TicketOutputDto updateTicket(TicketEditDto dto) {
-        Ticket oldTicket = ticketRepository.findById(dto.getId())
-                .orElseThrow(() -> new TicketNotFoundException("Ticket with ID: " + dto.getId() + " not found"));
-        if (State.DRAFT != oldTicket.getState()){
+        Ticket oldTicket = getById(dto.getId());
+        if (State.DRAFT != oldTicket.getState()) {
             throw new IllegalActionException();
         }
-        Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new CategoryNotFoundException("Category with ID: " + dto.getCategoryId() + " not found"));
+        Category category = categoryService.getById(dto.getCategoryId());
         Ticket updatedTicket = TicketMapper.toEntity(dto);
         updatedTicket.setId(oldTicket.getId());
         updatedTicket.setOwner(oldTicket.getOwner());
@@ -125,27 +120,15 @@ public class TicketServiceImpl implements TicketService {
     @Override
     @Transactional
     public TicketOutputDto changeTicketState(TicketStateChangeDto dto, Long userId) {
-        Ticket ticket = ticketRepository.findById(dto.getId())
-                .orElseThrow(() -> new TicketNotFoundException("Ticket with ID: " + dto.getId() + " not found"));
+        Ticket ticket = getById(dto.getId());
         State oldState = ticket.getState();
         State newState = State.valueOf(dto.getState());
-        User actor = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User with " + userId + " not found"));
+        User actor = userService.getById(userId);
         setTicketState(newState, actor, ticket);
         Ticket savedTicket = ticketRepository.save(ticket);
         historyService.logStateChange(oldState, ticket, userId);
         mailService.sendTicketStateChangeMessage(ticket, oldState);
         return TicketMapper.ToDto(savedTicket);
-    }
-
-    @Override
-    public List<TicketOutputDto> getByUserId(CustomUserDetails userDetails) {
-        return ticketRepository.findByUserId(userDetails.getId()).stream()
-                .map(ticket -> {
-                    List<ActionDto> actions = getTicketActions(ticket, userDetails);
-                    TicketOutputDto dto = TicketMapper.ToDto(ticket);
-                    dto.setActions(actions);
-                    return dto;
-                }).collect(Collectors.toList());
     }
 
     private void setTicketState(State newState, User actor, Ticket ticket) throws IllegalActionException {

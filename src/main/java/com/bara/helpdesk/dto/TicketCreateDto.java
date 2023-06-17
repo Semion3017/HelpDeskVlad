@@ -4,8 +4,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -24,11 +26,6 @@ public class TicketCreateDto {
 
     @NotNull
     private LocalDate desiredDate;
-
-    @NotNull
-    private String state;
-
-    // todo add attachment
 
     private String comment;
 }

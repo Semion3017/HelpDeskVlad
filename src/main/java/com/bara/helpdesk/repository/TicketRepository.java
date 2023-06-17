@@ -17,12 +17,11 @@ import java.util.List;
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Long>, JpaSpecificationExecutor<Ticket> {
 
-    //TODO: sorting by keyword (?1 is null or)
-    @Query("SELECT t FROM Ticket t WHERE ?1 is null or (upper(t.name) LIKE concat('%', upper(?1), '%') " +
-            "or upper(cast(t.urgency as java.lang.String)) LIKE concat('%', upper(?1), '%') " +
-            "or upper(cast(t.desiredResolutionDate as java.lang.String)) LIKE concat('%', upper(?1), '%')) " +
-            "or upper(cast(t.state as java.lang.String)) LIKE concat('%', upper(?1), '%')")
-    Page<Ticket> findAllSortedByKeyword(Pageable pageable, String keyword);
+//    @Query("SELECT t FROM Ticket t WHERE ?1 is null or (upper(t.name) LIKE concat('%', upper(?1), '%') " +
+//            "or upper(cast(t.urgency as java.lang.String)) LIKE concat('%', upper(?1), '%') " +
+//            "or upper(cast(t.desiredResolutionDate as java.lang.String)) LIKE concat('%', upper(?1), '%')) " +
+//            "or upper(cast(t.state as java.lang.String)) LIKE concat('%', upper(?1), '%')")
+//    Page<Ticket> findAllSortedByKeyword(Pageable pageable, String keyword);
     @Query("SELECT t FROM Ticket t WHERE t.owner.id = ?1 or t.approver.id = ?1 or t.assignee.id = ?1")
     List<Ticket> findByUserId(Long userId);
 }

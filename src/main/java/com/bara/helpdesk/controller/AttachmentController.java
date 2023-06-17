@@ -4,9 +4,8 @@ import com.bara.helpdesk.dto.AttachmentOutputDto;
 import com.bara.helpdesk.security.CustomUserDetails;
 import com.bara.helpdesk.service.AttachmentService;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("api/attachment")
 public class AttachmentController {
-    private final Logger logger = LoggerFactory.getLogger(AttachmentController.class);
 
     private final AttachmentService attachmentService;
 
@@ -28,12 +26,21 @@ public class AttachmentController {
     }
 
     @PostMapping("/{ticketId}")
-    ResponseEntity<AttachmentOutputDto> addAttachment(@PathVariable Long ticketId, @RequestBody MultipartFile file, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        return ResponseEntity.ok(attachmentService.save(ticketId, file, customUserDetails));
+    HttpStatus addAttachments(
+            @PathVariable Long ticketId,
+            @RequestBody List<MultipartFile> files,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        attachmentService.validatedSaveAllAttachments(userDetails, ticketId, files);
+        return HttpStatus.CREATED;
     }
 
     @GetMapping("/download/{id}")
     ResponseEntity<Resource> download(@PathVariable Long id) {
         return attachmentService.getById(id);
+    }
+
+    @DeleteMapping
+    String deleteAllAttachmentsById(@RequestBody List<Long> idList, Long ticketId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        return attachmentService.deleteAllById(idList, ticketId, customUserDetails);
     }
 }

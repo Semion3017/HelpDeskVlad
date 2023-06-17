@@ -22,16 +22,16 @@ public class CommentController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<CommentOutputDto> createComment(
+    public CommentOutputDto createComment(
             @Validated @RequestBody CommentInputDto dto,
             @AuthenticationPrincipal CustomUserDetails customUserDetails)
     {
-        return ResponseEntity.ok(commentService.createComment(dto, customUserDetails.getId()));
+        return commentService.createComment(dto, customUserDetails.getId());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<CommentOutputDto>> getAllByTicketId(@PathVariable Long id){
-        return ResponseEntity.ok(commentService.getAllByTicketId(id));
+    public List<CommentOutputDto> getAllByTicketId(@PathVariable Long id){
+        return commentService.getAllByTicketId(id);
     }
 }

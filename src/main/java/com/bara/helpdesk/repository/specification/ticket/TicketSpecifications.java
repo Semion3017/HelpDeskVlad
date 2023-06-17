@@ -14,28 +14,24 @@ import java.util.List;
 public class TicketSpecifications {
 
     public static Specification<Ticket> filterAllByUser(User user, Boolean isAll) {
-        List<Predicate> predicates = new ArrayList<>();
-        if (Role.OWNER.equals(user.getRole())) {
-            return (root, query, cb) -> cb.equal(root.get(Ticket_.OWNER), user);
-        } else if (Role.MANAGER.equals(user.getRole())) {
-            return (root, query, cb) -> {
-                if (isAll) {
-                    predicates.add(cb.equal(root.get(Ticket_.STATE), State.NEW));
-                }
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (Role.OWNER.equals(user.getRole())) {
                 predicates.add(cb.equal(root.get(Ticket_.OWNER), user));
-                predicates.add(cb.equal(root.get(Ticket_.APPROVER), user));
-                return cb.or(predicates.toArray(new Predicate[0]));
-            };
-        } else if (Role.ENGINEER.equals(user.getRole())) {
-            return (root, query, cb) -> {
-                if (isAll) {
-                    predicates.add(cb.equal(root.get(Ticket_.STATE), State.APPROVED));
-                }
-                predicates.add(cb.equal(root.get(Ticket_.ASSIGNEE), user));
-                return cb.or(predicates.toArray(new Predicate[0]));
-            };
-        }
-        return null;
+            } else if (Role.MANAGER.equals(user.getRole())) {
+                    if (isAll) {
+                        predicates.add(cb.equal(root.get(Ticket_.STATE), State.NEW));
+                    }
+                    predicates.add(cb.equal(root.get(Ticket_.OWNER), user));
+                    predicates.add(cb.equal(root.get(Ticket_.APPROVER), user));
+            } else if (Role.ENGINEER.equals(user.getRole())) {
+                    if (isAll) {
+                        predicates.add(cb.equal(root.get(Ticket_.STATE), State.APPROVED));
+                    }
+                    predicates.add(cb.equal(root.get(Ticket_.ASSIGNEE), user));
+            }
+            return cb.or(predicates.toArray(new Predicate[0]));
+        };
     }
 
     public static Specification<Ticket> ticketFieldsLikeKeyword(String keyword) {

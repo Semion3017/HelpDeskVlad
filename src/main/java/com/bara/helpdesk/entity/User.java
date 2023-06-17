@@ -27,7 +27,7 @@ public class User{
     private Role role;
 
     @Column(name = "email", unique = true)
-    @Email
+    @Email   //TODO: email regex
     private String email;
 
     @Column(name = "password")

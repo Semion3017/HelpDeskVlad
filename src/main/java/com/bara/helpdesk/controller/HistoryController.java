@@ -21,7 +21,7 @@ public class HistoryController {
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<HistoryOutputDto>> getAllByTicketId(@PathVariable Long id){
-        return ResponseEntity.ok(historyService.getByTicketId(id));
+    public List<HistoryOutputDto> getAllByTicketId(@PathVariable Long id){
+        return historyService.getByTicketId(id);
     }
 }

@@ -30,10 +30,7 @@ public class TicketMapper {
     }
 
     public static Ticket toEntity(TicketCreateDto dto) {
-        State state = State.valueOf(dto.getState());
-        if (state != State.DRAFT & state != State.NEW) {
-            state = State.DRAFT;
-        }
+
         return Ticket.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
@@ -41,14 +38,10 @@ public class TicketMapper {
                 .desiredResolutionDate(dto.getDesiredDate())
                 .urgency(Urgency.valueOf(dto.getUrgency()))
                 .urgencyNumber(Urgency.valueOf(dto.getUrgency()).ordinal())
-                .state(state)
+                .state(State.DRAFT)
                 .build();
     }
     public static Ticket toEntity(TicketEditDto dto) {
-        State state = State.valueOf(dto.getState());
-        if (State.valueOf(dto.getState()) != State.DRAFT & State.valueOf(dto.getState()) != State.NEW) {
-            state = State.DRAFT;
-        }
         return Ticket.builder()
                 .id(dto.getId())
                 .name(dto.getName())
@@ -56,7 +49,7 @@ public class TicketMapper {
                 .desiredResolutionDate(dto.getDesiredDate())
                 .urgency(Urgency.valueOf(dto.getUrgency()))
                 .urgencyNumber(Urgency.valueOf(dto.getUrgency()).ordinal())
-                .state(state)
+                .state(State.DRAFT)
                 .build();
     }
 }

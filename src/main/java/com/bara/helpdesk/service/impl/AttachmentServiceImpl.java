@@ -5,20 +5,18 @@ import com.bara.helpdesk.dto.exception.*;
 import com.bara.helpdesk.entity.Attachment;
 import com.bara.helpdesk.entity.Ticket;
 import com.bara.helpdesk.entity.User;
+import com.bara.helpdesk.entity.enums.State;
 import com.bara.helpdesk.mapper.AttachmentMapper;
 import com.bara.helpdesk.repository.AttachmentRepository;
-import com.bara.helpdesk.repository.TicketRepository;
-import com.bara.helpdesk.repository.UserRepository;
 import com.bara.helpdesk.security.CustomUserDetails;
 import com.bara.helpdesk.service.AttachmentService;
+import com.bara.helpdesk.service.TicketService;
+import com.bara.helpdesk.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,23 +33,32 @@ public class AttachmentServiceImpl implements AttachmentService {
     private static final Long FILE_MAX_SIZE = 50000000L;
 
     private final AttachmentRepository attachmentRepository;
-    private final TicketRepository ticketRepository;
-    private final UserRepository userRepository;
+    private final TicketService ticketService;
+    private final UserService userService;
 
     @Override
     public List<AttachmentOutputDto> getAllByTicketId(Long ticketId) {
         return attachmentRepository.findAllByTicketId(ticketId).stream().map(AttachmentMapper::toDto).collect(Collectors.toList());
     }
 
-    @SneakyThrows(IOException.class)
     @Override
-    public AttachmentOutputDto save(Long ticketId, MultipartFile file, CustomUserDetails customUserDetails) {
-        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new TicketNotFoundException("Ticket with id: " + ticketId + " notFound"));
-        User actor = userRepository.findById(customUserDetails.getId()).orElseThrow(() -> new UserNotFoundException("User with id: " + customUserDetails.getId() + " notFound"));
-        String extension = Objects.requireNonNull(file.getOriginalFilename()).substring(file.getOriginalFilename().lastIndexOf('.') + 1);
-        if (!Objects.equals(ticket.getOwner(), actor)) {
+    public void saveAllAttachments(Long ticketId, List<MultipartFile> files) {
+        files.forEach((file) -> save(ticketId, file));
+    }
+
+    @Override
+    public void validatedSaveAllAttachments(CustomUserDetails userDetails, Long ticketId, List<MultipartFile> files) {
+        Ticket ticket = ticketService.getById(ticketId);
+        User actor = userService.getById(userDetails.getId());
+        if ((!Objects.equals(ticket.getOwner(), actor)) || !State.DRAFT.equals(ticket.getState())) {
             throw new IllegalActionException();
         }
+        saveAllAttachments(ticketId, files);
+    }
+
+    @SneakyThrows(IOException.class)
+    private void save(Long ticketId, MultipartFile file) {
+        String extension = Objects.requireNonNull(file.getOriginalFilename()).substring(file.getOriginalFilename().lastIndexOf('.') + 1);
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
             throw new IllegalFileExtensionException();
         }
@@ -63,12 +70,12 @@ public class AttachmentServiceImpl implements AttachmentService {
                 .name(file.getOriginalFilename())
                 .ticketId(ticketId)
                 .build();
-        return AttachmentMapper.toDto(attachmentRepository.save(newAttachment));
+        attachmentRepository.save(newAttachment);
     }
 
     @Override
     public ResponseEntity<Resource> getById(Long id) {
-        Attachment attachment = attachmentRepository.findById(id).orElseThrow(); //TODO exception
+        Attachment attachment = attachmentRepository.findById(id).orElseThrow(() -> new AttachmentNotFoundException("Attachment with id: " + id + " not found"));
         byte[] array = attachment.getBlob();
 
         ByteArrayResource resource = new ByteArrayResource(array);
@@ -80,5 +87,15 @@ public class AttachmentServiceImpl implements AttachmentService {
                                 .filename(attachment.getName())
                                 .build().toString())
                 .body(resource);
+    }
+
+    @Override
+    public String deleteAllById(List<Long> idList, Long ticketId, CustomUserDetails userDetails) {
+        Ticket ticket = ticketService.getById(ticketId);
+        if ((!Objects.equals(ticket.getOwner().getId(), userDetails.getId())) || !State.DRAFT.equals(ticket.getState())) {
+            throw new IllegalActionException();
+        }
+        attachmentRepository.deleteAllByIdInBatch(idList);
+        return "Attachment was removed";
     }
 }

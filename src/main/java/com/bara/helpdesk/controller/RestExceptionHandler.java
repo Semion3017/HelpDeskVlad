@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -74,7 +75,7 @@ public class RestExceptionHandler {
     }
 
     @ExceptionHandler(IllegalActionException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalStateChange(IllegalActionException e, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleIllegalStateChangeException(IllegalActionException e, WebRequest request) {
         LOGGER.error(IllegalActionException.ILLEGAL_ACTION, e);
         ErrorResponse errorResponse = buildErrorResponse(
                 IllegalActionException.ILLEGAL_ACTION,
@@ -82,6 +83,17 @@ public class RestExceptionHandler {
                 request
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsExceptionException(BadCredentialsException e, WebRequest request) {
+        LOGGER.error(e.getMessage(), e);
+        ErrorResponse errorResponse = buildErrorResponse(
+                "Username or password not valid",
+                HttpStatus.BAD_REQUEST,
+                request
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
