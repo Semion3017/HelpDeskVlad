@@ -132,7 +132,8 @@ public class TicketServiceImpl implements TicketService {
     private void setTicketState(State newState, CustomUserDetails actor, Ticket ticket) throws IllegalActionException {
         State oldState = ticket.getState();
         ticket.setState(newState);
-        if ((State.DRAFT.equals(newState) | State.NEW.equals(newState) | State.CANCELED.equals(newState)) && (State.DECLINED.equals(oldState) | State.DRAFT.equals(oldState)) && isOwner(ticket, actor)) {
+        if ((State.DRAFT.equals(newState) | State.NEW.equals(newState) | State.CANCELED.equals(newState))
+                && (State.DECLINED.equals(oldState) | State.DRAFT.equals(oldState)) && isOwner(ticket, actor)) {
 
         } else if (State.DECLINED.equals(newState) && State.NEW.equals(oldState) && Role.MANAGER.equals(actor.getRole())) {
 
