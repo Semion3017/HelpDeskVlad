@@ -61,6 +61,6 @@ public class TicketController {
     @PutMapping("/state")
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
     public TicketOutputDto changeTicketState(@RequestBody TicketStateChangeDto dto, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        return ticketService.changeTicketState(dto, customUserDetails.getId());
+        return ticketService.changeTicketState(dto, customUserDetails);
     }
 }

@@ -12,7 +12,6 @@ import com.bara.helpdesk.repository.TicketRepository;
 import com.bara.helpdesk.repository.specification.ticket.TicketSpecifications;
 import com.bara.helpdesk.security.CustomUserDetails;
 import com.bara.helpdesk.service.*;
-import jakarta.persistence.criteria.Order;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -119,54 +118,57 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
-    public TicketOutputDto changeTicketState(TicketStateChangeDto dto, Long userId) {
+    public TicketOutputDto changeTicketState(TicketStateChangeDto dto, CustomUserDetails userDetails) {
         Ticket ticket = getById(dto.getId());
         State oldState = ticket.getState();
         State newState = State.valueOf(dto.getState());
-        User actor = userService.getById(userId);
-        setTicketState(newState, actor, ticket);
+        setTicketState(newState, userDetails, ticket);
         Ticket savedTicket = ticketRepository.save(ticket);
-        historyService.logStateChange(oldState, ticket, userId);
+        historyService.logStateChange(oldState, ticket, userDetails.getId());
         mailService.sendTicketStateChangeMessage(ticket, oldState);
         return TicketMapper.ToDto(savedTicket);
     }
 
-    private void setTicketState(State newState, User actor, Ticket ticket) throws IllegalActionException {
+    private void setTicketState(State newState, CustomUserDetails actor, Ticket ticket) throws IllegalActionException {
         State oldState = ticket.getState();
         ticket.setState(newState);
-        if ((newState == State.NEW | newState == State.CANCELED) && (oldState == State.DECLINED | oldState == State.DRAFT) && actor == ticket.getOwner()) {
+        if ((State.NEW.equals(newState) | State.CANCELED.equals(newState)) && (State.DECLINED.equals(oldState) | State.DRAFT.equals(oldState)) && isOwner(ticket, actor)) {
 
-        } else if (newState == State.DECLINED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
-            ticket.setApprover(actor);
-        } else if (newState == State.CANCELED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
-            ticket.setApprover(actor);
-        } else if (newState == State.CANCELED && oldState == State.APPROVED && Role.ENGINEER.equals(actor.getRole())) {
+        } else if (State.DECLINED.equals(newState) && State.NEW.equals(oldState) && Role.MANAGER.equals(actor.getRole())) {
 
-        } else if (newState == State.APPROVED && oldState == State.NEW && Role.MANAGER.equals(actor.getRole())) {
-            ticket.setApprover(actor);
-        } else if (newState == State.IN_PROGRESS && oldState == State.APPROVED && Role.ENGINEER.equals(actor.getRole())) {
-            ticket.setAssignee(actor);
-        } else if (newState != State.DONE || oldState != State.IN_PROGRESS || !Role.ENGINEER.equals(actor.getRole())) {
+        } else if (State.CANCELED.equals(newState) && State.NEW.equals(oldState) && Role.MANAGER.equals(actor.getRole())) {
+
+        } else if (State.CANCELED.equals(newState) && State.APPROVED.equals(oldState) && Role.ENGINEER.equals(actor.getRole())) {
+
+        } else if (State.APPROVED.equals(newState) && State.NEW.equals(oldState) && Role.MANAGER.equals(actor.getRole())) {
+            ticket.setApprover(userService.getById(actor.getId()));
+        } else if (State.IN_PROGRESS.equals(newState) && State.APPROVED.equals(oldState) && Role.ENGINEER.equals(actor.getRole())) {
+            ticket.setAssignee(userService.getById(actor.getId()));
+        } else if (!State.DONE.equals(newState) || !State.IN_PROGRESS.equals(oldState) || !Role.ENGINEER.equals(actor.getRole())) {
             throw new IllegalActionException();
         }
     }
 
     private List<ActionDto> getTicketActions(Ticket ticket, CustomUserDetails userDetails) {
-        if (ticket.getState() == State.DRAFT && ticket.getOwner().getId() == userDetails.getId()) {
+        if (State.DRAFT.equals(ticket.getState()) && isOwner(ticket, userDetails)) {
             return List.of(new ActionDto(State.NEW), new ActionDto(State.CANCELED));
         }
-        if (ticket.getState() == State.NEW && userDetails.getRole() == Role.MANAGER && ticket.getOwner().getId() != userDetails.getId()) {
+        if (State.NEW.equals(ticket.getState()) && userDetails.getRole() == Role.MANAGER && isOwner(ticket, userDetails)) {
             return List.of(new ActionDto(State.APPROVED), new ActionDto(State.CANCELED), new ActionDto(State.DECLINED));
         }
-        if (ticket.getState() == State.APPROVED && userDetails.getRole() == Role.ENGINEER) {
+        if (State.APPROVED.equals(ticket.getState()) && userDetails.getRole() == Role.ENGINEER) {
             return List.of(new ActionDto(State.IN_PROGRESS), new ActionDto(State.CANCELED));
         }
-        if (ticket.getState() == State.DECLINED && ticket.getOwner().getId() == userDetails.getId()) {
-            return List.of(new ActionDto(State.NEW), new ActionDto(State.CANCELED));
+        if (State.DECLINED.equals(ticket.getState()) && isOwner(ticket, userDetails)) {
+            return List.of(new ActionDto(State.DRAFT), new ActionDto(State.CANCELED));
         }
-        if (ticket.getState() == State.IN_PROGRESS && ticket.getAssignee().getId() == userDetails.getId()) {
+        if (State.IN_PROGRESS.equals(ticket.getState()) && userDetails.getId().equals(ticket.getAssignee().getId())) {
             return List.of(new ActionDto(State.DONE));
         }
         return List.of();
+    }
+
+    private Boolean isOwner(Ticket ticket, CustomUserDetails userDetails){
+        return userDetails.getId().equals(ticket.getOwner().getId());
     }
 }

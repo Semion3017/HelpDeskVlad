@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum State {
-    DRAFT("Create"),
+    DRAFT("To Draft"),
     NEW("Submit"),
     APPROVED("Approve"),
     DECLINED("Decline"),
