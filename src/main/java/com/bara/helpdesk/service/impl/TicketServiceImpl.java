@@ -132,7 +132,7 @@ public class TicketServiceImpl implements TicketService {
     private void setTicketState(State newState, CustomUserDetails actor, Ticket ticket) throws IllegalActionException {
         State oldState = ticket.getState();
         ticket.setState(newState);
-        if ((State.NEW.equals(newState) | State.CANCELED.equals(newState)) && (State.DECLINED.equals(oldState) | State.DRAFT.equals(oldState)) && isOwner(ticket, actor)) {
+        if ((State.DRAFT.equals(newState) | State.NEW.equals(newState) | State.CANCELED.equals(newState)) && (State.DECLINED.equals(oldState) | State.DRAFT.equals(oldState)) && isOwner(ticket, actor)) {
 
         } else if (State.DECLINED.equals(newState) && State.NEW.equals(oldState) && Role.MANAGER.equals(actor.getRole())) {
 
@@ -153,7 +153,7 @@ public class TicketServiceImpl implements TicketService {
         if (State.DRAFT.equals(ticket.getState()) && isOwner(ticket, userDetails)) {
             return List.of(new ActionDto(State.NEW), new ActionDto(State.CANCELED));
         }
-        if (State.NEW.equals(ticket.getState()) && userDetails.getRole() == Role.MANAGER && isOwner(ticket, userDetails)) {
+        if (State.NEW.equals(ticket.getState()) && userDetails.getRole() == Role.MANAGER && !isOwner(ticket, userDetails)) {
             return List.of(new ActionDto(State.APPROVED), new ActionDto(State.CANCELED), new ActionDto(State.DECLINED));
         }
         if (State.APPROVED.equals(ticket.getState()) && userDetails.getRole() == Role.ENGINEER) {
