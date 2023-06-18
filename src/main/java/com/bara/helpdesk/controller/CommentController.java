@@ -2,16 +2,15 @@ package com.bara.helpdesk.controller;
 
 import com.bara.helpdesk.dto.CommentInputDto;
 import com.bara.helpdesk.dto.CommentOutputDto;
+import com.bara.helpdesk.dto.PageOutputDto;
 import com.bara.helpdesk.security.CustomUserDetails;
 import com.bara.helpdesk.service.CommentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/comment")
@@ -31,7 +30,10 @@ public class CommentController {
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public List<CommentOutputDto> getAllByTicketId(@PathVariable Long id){
-        return commentService.getAllByTicketId(id);
+    public PageOutputDto<CommentOutputDto> getAllByTicketId(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer size){
+        return commentService.getAllByTicketId(id, page, size);
     }
 }

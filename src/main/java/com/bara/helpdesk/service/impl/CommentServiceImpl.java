@@ -2,6 +2,7 @@ package com.bara.helpdesk.service.impl;
 
 import com.bara.helpdesk.dto.CommentInputDto;
 import com.bara.helpdesk.dto.CommentOutputDto;
+import com.bara.helpdesk.dto.PageOutputDto;
 import com.bara.helpdesk.entity.Comment;
 import com.bara.helpdesk.mapper.CommentMapper;
 import com.bara.helpdesk.repository.CommentRepository;
@@ -9,10 +10,9 @@ import com.bara.helpdesk.service.CommentService;
 import com.bara.helpdesk.service.TicketService;
 import com.bara.helpdesk.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -31,7 +31,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentOutputDto> getAllByTicketId(Long id) {
-        return commentRepository.getAllByTicketId(id).stream().map(CommentMapper::toDto).collect(Collectors.toList());
+    public PageOutputDto<CommentOutputDto> getAllByTicketId(Long id, Integer page, Integer size) {
+        Integer count = commentRepository.findAllByTicketId(id).size();
+        Page<CommentOutputDto> commentPage = commentRepository.findAllByTicketId(id, PageRequest.of(page - 1, size)).map(CommentMapper::toDto);
+        return new PageOutputDto<>(commentPage.getContent(), count);
     }
 }

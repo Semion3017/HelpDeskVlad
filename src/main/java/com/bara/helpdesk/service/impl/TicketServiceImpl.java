@@ -169,7 +169,7 @@ public class TicketServiceImpl implements TicketService {
         return List.of();
     }
 
-    private Boolean isOwner(Ticket ticket, CustomUserDetails userDetails){
+    private Boolean isOwner(Ticket ticket, CustomUserDetails userDetails) {
         return userDetails.getId().equals(ticket.getOwner().getId());
     }
 }

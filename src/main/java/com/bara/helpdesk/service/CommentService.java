@@ -3,11 +3,11 @@ package com.bara.helpdesk.service;
 
 import com.bara.helpdesk.dto.CommentInputDto;
 import com.bara.helpdesk.dto.CommentOutputDto;
+import com.bara.helpdesk.dto.PageOutputDto;
 
-import java.util.List;
 
 public interface CommentService {
     CommentOutputDto createComment(CommentInputDto dto, Long userId);
 
-    List<CommentOutputDto> getAllByTicketId(Long id);
+    PageOutputDto<CommentOutputDto> getAllByTicketId(Long id, Integer page, Integer size);
 }

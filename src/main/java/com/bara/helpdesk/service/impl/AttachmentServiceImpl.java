@@ -53,7 +53,9 @@ public class AttachmentServiceImpl implements AttachmentService {
         if ((!Objects.equals(ticket.getOwner(), actor)) || !State.DRAFT.equals(ticket.getState())) {
             throw new IllegalActionException();
         }
-        saveAllAttachments(ticketId, files);
+        if (!Objects.equals(null, files)){
+            saveAllAttachments(ticketId, files);
+        }
     }
 
     @SneakyThrows(IOException.class)

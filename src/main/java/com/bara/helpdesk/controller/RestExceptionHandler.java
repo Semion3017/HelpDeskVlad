@@ -99,6 +99,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleInternalServerError(Exception e, WebRequest request) {
         if (e instanceof NullPointerException) {
+            LOGGER.error(e.getMessage(), e);
             return new ResponseEntity<>(buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST, request), HttpStatus.BAD_REQUEST);
         }
         LOGGER.error(e.getMessage(), e);

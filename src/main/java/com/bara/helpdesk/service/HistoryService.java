@@ -1,14 +1,13 @@
 package com.bara.helpdesk.service;
 
 import com.bara.helpdesk.dto.HistoryOutputDto;
+import com.bara.helpdesk.dto.PageOutputDto;
 import com.bara.helpdesk.entity.Ticket;
 import com.bara.helpdesk.entity.enums.State;
 
-import java.util.List;
-
 public interface HistoryService {
 
-    List<HistoryOutputDto> getByTicketId(Long ticketId);
+    PageOutputDto<HistoryOutputDto> getByTicketId(Long ticketId, Integer page, Integer size);
 
     String logTicketCreation(Ticket ticket);
 
