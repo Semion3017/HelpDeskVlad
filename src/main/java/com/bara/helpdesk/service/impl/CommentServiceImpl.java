@@ -33,7 +33,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public PageOutputDto<CommentOutputDto> getAllByTicketId(Long id, Integer page, Integer size) {
         Integer count = commentRepository.findAllByTicketId(id).size();
-        Page<CommentOutputDto> commentPage = commentRepository.findAllByTicketId(id, PageRequest.of(page - 1, size)).map(CommentMapper::toDto);
+        Page<CommentOutputDto> commentPage = commentRepository.findAllByTicketId(id, PageRequest.of(page, size)).map(CommentMapper::toDto);
         return new PageOutputDto<>(commentPage.getContent(), count);
     }
 }

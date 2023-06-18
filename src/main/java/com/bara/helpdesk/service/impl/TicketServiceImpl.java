@@ -56,7 +56,7 @@ public class TicketServiceImpl implements TicketService {
                 .size();
         Page<TicketOutputDto> page = ticketRepository.findAll(
                         TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword())),
-                        PageRequest.of(params.getPage() - 1, params.getSize(), Sort.by(paramsOrder, desiredDateOrder)))
+                        PageRequest.of(params.getPage(), params.getSize(), Sort.by(paramsOrder, desiredDateOrder)))
                 .map(ticket -> {
                     List<ActionDto> actions = getTicketActions(ticket, userDetails);
                     TicketOutputDto dto = TicketMapper.ToDto(ticket);
