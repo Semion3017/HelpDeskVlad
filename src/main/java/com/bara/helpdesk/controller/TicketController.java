@@ -39,6 +39,7 @@ public class TicketController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public TicketOutputDto getTicketById(@PathVariable Long id) {
         return ticketService.getDtoById(id);
     }

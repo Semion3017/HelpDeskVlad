@@ -2,6 +2,7 @@ package com.bara.helpdesk.service.impl;
 
 import com.bara.helpdesk.dto.*;
 import com.bara.helpdesk.dto.exception.IllegalActionException;
+import com.bara.helpdesk.dto.exception.IncorrectDateException;
 import com.bara.helpdesk.dto.exception.TicketNotFoundException;
 import com.bara.helpdesk.entity.*;
 import com.bara.helpdesk.entity.enums.Role;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -85,6 +87,9 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = TicketMapper.toEntity(dto);
         ticket.setCategory(category);
         ticket.setOwner(owner);
+        if (LocalDate.now().isAfter(ticket.getDesiredResolutionDate())){
+            throw new IncorrectDateException();
+        }
         Ticket createdTicket = ticketRepository.save(ticket);
         TicketOutputDto createdTicketDto = TicketMapper.ToDto(createdTicket);
         historyService.logTicketCreation(createdTicket);
@@ -112,6 +117,7 @@ public class TicketServiceImpl implements TicketService {
         updatedTicket.setOwner(oldTicket.getOwner());
         updatedTicket.setCreatedOn(oldTicket.getCreatedOn());
         updatedTicket.setCategory(category);
+        updatedTicket.setAttachments(oldTicket.getAttachments());
         historyService.logTicketUpdate(updatedTicket);
         return TicketMapper.ToDto(ticketRepository.save(updatedTicket));
     }

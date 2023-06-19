@@ -32,6 +32,14 @@ public class RestExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(IncorrectDateException.class)
+    public ResponseEntity<ErrorResponse> handleIncorrectDateException(IncorrectDateException e, WebRequest request) {
+        LOGGER.error(IncorrectDateException.INCORRECT_DATE, e);
+        ErrorResponse errorResponse = buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST, request);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+
     @ExceptionHandler(FeedbackNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleFeedbackNotFoundException(FeedbackNotFoundException e, WebRequest request) {
         LOGGER.error(FeedbackNotFoundException.FEEDBACK_NOT_FOUND, e);
