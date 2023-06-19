@@ -53,7 +53,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         if ((!Objects.equals(ticket.getOwner(), actor)) || !State.DRAFT.equals(ticket.getState())) {
             throw new IllegalActionException();
         }
-        if (!Objects.equals(null, files)){
+        if (!Objects.equals(null, files)) {
             saveAllAttachments(ticketId, files);
         }
     }
@@ -97,13 +97,11 @@ public class AttachmentServiceImpl implements AttachmentService {
         if ((!Objects.equals(ticket.getOwner().getId(), userDetails.getId())) || !State.DRAFT.equals(ticket.getState())) {
             throw new IllegalActionException();
         }
-        List<Long> attachmentsIdList = ticket.getAttachments().stream().map(Attachment::getId).toList();
-        for (Long id : idList) {
-            if (!attachmentsIdList.contains(id)){
-                throw new IllegalActionException("Attachment with ID: " + id + "does not apply to the ticket ID:" + ticketId);
-            }
-        }
-        attachmentRepository.deleteAllByIdInBatch(idList);
+        List<Long> validatedIdListToDelete = ticket.getAttachments().stream()
+                .map(Attachment::getId)
+                .filter(idList::contains)
+                .toList();
+        attachmentRepository.deleteAllByIdInBatch(validatedIdListToDelete);
         return "Attachment was removed";
     }
 }
