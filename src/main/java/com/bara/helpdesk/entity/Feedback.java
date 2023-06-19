@@ -34,7 +34,7 @@ public class Feedback {
     @Column(name = "text", columnDefinition = "varchar(500)")
     private String text;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "ticket_id")
     private Ticket ticket;
 

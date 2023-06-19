@@ -54,6 +54,29 @@ public class HistoryServiceImpl implements HistoryService {
     }
 
     @Override
+    public String logFileAttached(Ticket ticket, String attachmentName) {
+        History history = History.builder()
+                .ticket(ticket)
+                .user(ticket.getOwner())
+                .action("File is attached")
+                .date(LocalDateTime.now())
+                .description("File is attached: " + attachmentName)
+                .build();
+        return historyRepository.save(history).getDescription();
+    }
+    @Override
+    public String logFileRemoved(Ticket ticket, String attachmentName) {
+        History history = History.builder()
+                .ticket(ticket)
+                .user(ticket.getOwner())
+                .action("File is removed")
+                .date(LocalDateTime.now())
+                .description("File is removed: " + attachmentName)
+                .build();
+        return historyRepository.save(history).getDescription();
+    }
+
+    @Override
     public String logStateChange(State oldState, Ticket ticket, Long userId) {
         User user = userService.getById(userId);
         History history = History.builder()

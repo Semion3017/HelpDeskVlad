@@ -13,5 +13,9 @@ public interface HistoryService {
 
     String logTicketUpdate(Ticket ticket);
 
+    String logFileAttached(Ticket ticket, String attachmentName);
+
+    String logFileRemoved(Ticket ticket, String attachmentName);
+
     String logStateChange(State oldState, Ticket ticket, Long userId);
 }

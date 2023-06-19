@@ -86,7 +86,7 @@ public class RestExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalStateChangeException(IllegalActionException e, WebRequest request) {
         LOGGER.error(IllegalActionException.ILLEGAL_ACTION, e);
         ErrorResponse errorResponse = buildErrorResponse(
-                IllegalActionException.ILLEGAL_ACTION,
+                e.getMessage(),
                 HttpStatus.FORBIDDEN,
                 request
         );

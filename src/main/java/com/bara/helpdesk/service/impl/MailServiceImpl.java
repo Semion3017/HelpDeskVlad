@@ -33,6 +33,18 @@ public class MailServiceImpl implements MailService {
 
     @Override
     @Async
+    public void sendFeedbackProvidedMessage(Ticket ticket){
+        MessageData messageData = MessageData.builder()
+                .messageSubject("Feedback was provided")
+                .username(ticket.getAssignee().getFirstName() + " " + ticket.getAssignee().getLastName())
+                .ticket(ticket)
+                .template("FeedbackWasProvidedTemplate")
+                .build();
+        sendSimpleTicketMessage(messageData, ticket.getAssignee().getEmail());
+    }
+
+    @Override
+    @Async
     public void sendTicketStateChangeMessage(Ticket ticket, State oldState) {
         State newState = ticket.getState();
         switch (newState) {

@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
     Optional<Feedback> getByTicketId(Long id);
+
+    Boolean existsByTicketId(Long ticketId);
 }

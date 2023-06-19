@@ -10,6 +10,7 @@ import com.bara.helpdesk.mapper.AttachmentMapper;
 import com.bara.helpdesk.repository.AttachmentRepository;
 import com.bara.helpdesk.security.CustomUserDetails;
 import com.bara.helpdesk.service.AttachmentService;
+import com.bara.helpdesk.service.HistoryService;
 import com.bara.helpdesk.service.TicketService;
 import com.bara.helpdesk.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     private static final Long FILE_MAX_SIZE = 50000000L;
 
     private final AttachmentRepository attachmentRepository;
+    private final HistoryService historyService;
     private final TicketService ticketService;
     private final UserService userService;
 
@@ -55,6 +57,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         }
         if (!Objects.equals(null, files)) {
             saveAllAttachments(ticketId, files);
+            files.forEach((file -> historyService.logFileAttached(ticket, file.getOriginalFilename())));
         }
     }
 
@@ -101,6 +104,9 @@ public class AttachmentServiceImpl implements AttachmentService {
                 .map(Attachment::getId)
                 .filter(idList::contains)
                 .toList();
+        ticket.getAttachments().stream()
+                        .filter(attachment -> validatedIdListToDelete.contains(attachment.getId()))
+                                .forEach(attachment -> historyService.logFileRemoved(ticket, attachment.getName()));
         attachmentRepository.deleteAllByIdInBatch(validatedIdListToDelete);
         return "Attachment was removed";
     }

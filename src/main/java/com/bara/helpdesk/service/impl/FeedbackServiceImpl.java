@@ -10,6 +10,7 @@ import com.bara.helpdesk.entity.enums.State;
 import com.bara.helpdesk.mapper.FeedbackMapper;
 import com.bara.helpdesk.repository.FeedbackRepository;
 import com.bara.helpdesk.service.FeedbackService;
+import com.bara.helpdesk.service.MailService;
 import com.bara.helpdesk.service.TicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.util.Objects;
 public class FeedbackServiceImpl implements FeedbackService {
 
     private final FeedbackRepository feedbackRepository;
+    private final MailService mailService;
     private final TicketService ticketService;
 
     @Override
@@ -30,9 +32,14 @@ public class FeedbackServiceImpl implements FeedbackService {
         if (!Objects.equals(userId, ticket.getOwner().getId()) || State.DONE != ticket.getState()) {
             throw new IllegalActionException();
         }
+        if (feedbackRepository.existsByTicketId(ticket.getId())) {
+            throw new IllegalActionException("Feedback already exists");
+        }
         feedback.setTicket(ticket);
         feedback.setUser(ticket.getOwner());
-        return FeedbackMapper.toDto(feedbackRepository.save(feedback));
+        FeedbackOutputDto savedFeedback = FeedbackMapper.toDto(feedbackRepository.save(feedback));
+        mailService.sendFeedbackProvidedMessage(ticket);
+        return savedFeedback;
     }
 
     @Override
