@@ -21,7 +21,7 @@ public class Ticket {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", columnDefinition = "varchar(100)")
     private String name;
 
     @Column(name = "description", columnDefinition = "varchar(500)")

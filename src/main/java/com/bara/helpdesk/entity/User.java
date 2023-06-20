@@ -17,17 +17,17 @@ public class User{
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "first_name")
+    @Column(name = "first_name", columnDefinition = "varchar(100)")
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name", columnDefinition = "varchar(100)")
     private String lastName;
 
     @Enumerated(value = EnumType.STRING)
     private Role role;
 
-    @Column(name = "email", unique = true)
-    @Email   //TODO: email regex
+    @Column(name = "email", unique = true, columnDefinition = "varchar(100)")
+    @Email
     private String email;
 
     @Column(name = "password")

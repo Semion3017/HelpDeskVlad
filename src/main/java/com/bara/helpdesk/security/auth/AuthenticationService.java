@@ -2,6 +2,7 @@ package com.bara.helpdesk.security.auth;
 
 
 import com.bara.helpdesk.dto.exception.AlreadyExistsException;
+import com.bara.helpdesk.dto.exception.EmailRequirementsException;
 import com.bara.helpdesk.dto.exception.PasswordRequirementsException;
 import com.bara.helpdesk.dto.exception.UserNotFoundException;
 import com.bara.helpdesk.entity.User;
@@ -9,7 +10,6 @@ import com.bara.helpdesk.entity.enums.Role;
 import com.bara.helpdesk.repository.UserRepository;
 import com.bara.helpdesk.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -25,7 +25,9 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class AuthenticationService {
 
-    private final Pattern pattern = Pattern.compile("((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~.\"(),:;<>@!#$%&'*+-/=?^_`{|}]).{6,20})");
+    private final Pattern passwordPattern = Pattern.compile("((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~.\"(),:;<>@!#$%&'*+-/=?^_`{|}]).{6,20})");
+    private final Pattern emailPattern = Pattern.compile("^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
+            + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$");
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -40,8 +42,8 @@ public class AuthenticationService {
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(validate(request.getPassword())))
+                .email(validateEmail(request.getEmail()))
+                .password(passwordEncoder.encode(validatePassword(request.getPassword())))
                 .role(Role.OWNER)
                 .build();
         userRepository.save(user);
@@ -69,11 +71,18 @@ public class AuthenticationService {
         );
     }
 
-    private String validate(String password) {
-        Matcher matcher = pattern.matcher(password);
+    private String validatePassword(String password) {
+        Matcher matcher = passwordPattern.matcher(password);
         if (!matcher.matches()) {
             throw new PasswordRequirementsException();
         }
         return password;
+    }
+    private String validateEmail(String email) {
+        Matcher matcher = emailPattern.matcher(email);
+        if (!matcher.matches()) {
+            throw new EmailRequirementsException();
+        }
+        return email;
     }
 }
