@@ -17,13 +17,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,34 +39,20 @@ public class TicketServiceImpl implements TicketService {
 
 
     @Override
-    public List<TicketOutputDto> getAllTickets(CustomUserDetails userDetails) {
-        return ticketRepository.findAll().stream().map(ticket -> {
-            List<ActionDto> actions = getTicketActions(ticket, userDetails);
-            TicketOutputDto dto = TicketMapper.ToDto(ticket);
-            dto.setActions(actions);
-            return dto;
-        }).collect(Collectors.toList());
-    }
-
-    @Override
-    public PageOutputDto<TicketOutputDto> getAllSortedTickets(SortTicketParametersDto params, CustomUserDetails userDetails) {
+    public Page<TicketOutputDto> getAllSortedTickets(SortTicketParametersDto params, CustomUserDetails userDetails) {
         User user = userService.getById(userDetails.getId());
         Sort.Direction sortDirection = params.getDirection().equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort.Order paramsOrder = new Sort.Order(sortDirection, params.getColumnName());
         Sort.Order desiredDateOrder = new Sort.Order(Sort.Direction.ASC, Ticket_.DESIRED_RESOLUTION_DATE);
-        Integer count = ticketRepository
-                .findAll(TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword())))
-                .size();
-        Page<TicketOutputDto> page = ticketRepository.findAll(
-                        TicketSpecifications.filterAllByUser(user, params.getIsAll()).and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword())),
-                        PageRequest.of(params.getPage(), params.getSize(), Sort.by(paramsOrder, desiredDateOrder)))
-                .map(ticket -> {
-                    List<ActionDto> actions = getTicketActions(ticket, userDetails);
+        Specification<Ticket> specification = TicketSpecifications.filterAllByUser(user, params.getIsAll())
+                .and(TicketSpecifications.ticketFieldsLikeKeyword(params.getKeyword()));
+        Pageable pageable = PageRequest.of(params.getPage(), params.getSize(), Sort.by(paramsOrder, desiredDateOrder));
+        Page<Ticket> page = ticketRepository.findAll(specification, pageable);
+        return page.map(ticket -> {
                     TicketOutputDto dto = TicketMapper.ToDto(ticket);
-                    dto.setActions(actions);
+                    dto.setActions(getTicketActions(ticket, userDetails));
                     return dto;
                 });
-        return new PageOutputDto<>(page.getContent(), count);
     }
 
     @Override
@@ -87,7 +74,7 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = TicketMapper.toEntity(dto);
         ticket.setCategory(category);
         ticket.setOwner(owner);
-        if (LocalDate.now().isAfter(ticket.getDesiredResolutionDate())){
+        if (LocalDate.now().isAfter(ticket.getDesiredResolutionDate())) {
             throw new IncorrectDateException();
         }
         Ticket createdTicket = ticketRepository.save(ticket);

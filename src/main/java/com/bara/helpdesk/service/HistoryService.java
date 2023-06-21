@@ -4,10 +4,11 @@ import com.bara.helpdesk.dto.HistoryOutputDto;
 import com.bara.helpdesk.dto.PageOutputDto;
 import com.bara.helpdesk.entity.Ticket;
 import com.bara.helpdesk.entity.enums.State;
+import org.springframework.data.domain.Page;
 
 public interface HistoryService {
 
-    PageOutputDto<HistoryOutputDto> getByTicketId(Long ticketId, Integer page, Integer size);
+    Page<HistoryOutputDto> getByTicketId(Long ticketId, Integer page, Integer size);
 
     String logTicketCreation(Ticket ticket);
 

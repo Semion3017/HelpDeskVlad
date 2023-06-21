@@ -4,14 +4,13 @@ import com.bara.helpdesk.dto.*;
 import com.bara.helpdesk.entity.Ticket;
 import com.bara.helpdesk.security.CustomUserDetails;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface TicketService {
 
-    List<TicketOutputDto> getAllTickets(CustomUserDetails userDetails);
-
-    PageOutputDto<TicketOutputDto> getAllSortedTickets(SortTicketParametersDto params, CustomUserDetails userDetails);
+    Page<TicketOutputDto> getAllSortedTickets(SortTicketParametersDto params, CustomUserDetails userDetails);
 
     TicketOutputDto getDtoById(Long id);
 

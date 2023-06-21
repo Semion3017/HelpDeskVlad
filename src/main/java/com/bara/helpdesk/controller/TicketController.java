@@ -4,6 +4,7 @@ import com.bara.helpdesk.dto.*;
 import com.bara.helpdesk.security.CustomUserDetails;
 import com.bara.helpdesk.service.TicketService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -20,7 +21,7 @@ public class TicketController {
 
     @GetMapping("/all")
     @PreAuthorize("hasAnyAuthority('MANAGER', 'OWNER', 'ENGINEER')")
-    public PageOutputDto<TicketOutputDto> getAllTickets(
+    public Page<TicketOutputDto> getAllTickets(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size,

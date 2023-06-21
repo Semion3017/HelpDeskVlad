@@ -23,10 +23,8 @@ public class HistoryServiceImpl implements HistoryService {
     private final UserService userService;
 
     @Override
-    public PageOutputDto<HistoryOutputDto> getByTicketId(Long ticketId, Integer page, Integer size) {
-        Integer count = historyRepository.findAllByTicketId(ticketId).size();
-        Page<HistoryOutputDto> historyPage = historyRepository.findAllByTicketId(ticketId, PageRequest.of(page, size)).map(this::toDto);
-        return new PageOutputDto<>(historyPage.getContent(), count);
+    public Page<HistoryOutputDto> getByTicketId(Long ticketId, Integer page, Integer size) {
+        return historyRepository.findAllByTicketId(ticketId, PageRequest.of(page, size)).map(this::toDto);
     }
 
     @Override

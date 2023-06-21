@@ -34,8 +34,4 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "ticket_id")
     private Ticket ticket;
-
-
-
-
 }

@@ -1,9 +1,9 @@
 package com.bara.helpdesk.controller;
 
 import com.bara.helpdesk.dto.HistoryOutputDto;
-import com.bara.helpdesk.dto.PageOutputDto;
 import com.bara.helpdesk.service.HistoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +16,7 @@ public class HistoryController {
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public PageOutputDto<HistoryOutputDto> getAllByTicketId(
+    public Page<HistoryOutputDto> getAllByTicketId(
             @PathVariable Long id,
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size) {
